@@ -147,7 +147,7 @@ if r is not None:
         st.markdown("#### ⚖️ Weight")
         st.table({"Parameter": ["Material density (ρ)", "Shell weight (Eq. 16.59)",
                                  "Weight allowance", "Total weight/unit"],
-                  "Value": [f"{MATERIALS[r['material_key']]['density']} lb/in³",
+                  "Value": [f"{MATERIALS[material_key]['density']} lb/in³",
                              f"{r['W_shell_lb']:,.1f} lb",
                              f"+{int(round((r['W_total_lb']/r['W_shell_lb']-1)*100))}%",
                              f"{r['W_total_lb']:,.1f} lb ({r['W_total_lb']*0.453592/1000:.2f} t)"]})
