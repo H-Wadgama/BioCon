@@ -17,8 +17,35 @@ from pressure_vessel import (
     m_to_in, m_to_ft, K_to_F
 )
 
-# from cost import estimate_cost   # uncomment when cost.py is ready
+# ── Unit conversion helpers (UI layer only — engine always works in K / Pa / °F / psig) ──
+def to_kelvin(value, unit):
+    if unit == "K":  return value
+    if unit == "°C": return value + 273.15
+    if unit == "°F": return (value - 32) * 5/9 + 273.15
 
+def to_fahrenheit(value, unit):
+    """Convert a temperature value in any unit directly to °F (for design T override)."""
+    if unit == "°F": return value
+    if unit == "°C": return value * 9/5 + 32
+    if unit == "K":  return (value - 273.15) * 9/5 + 32
+
+def to_pascal_abs(value, unit):
+    """Convert an ABSOLUTE pressure to Pa."""
+    if unit == "Pa":  return value
+    if unit == "bar": return value * 1e5
+    if unit == "atm": return value * 101325.0
+    if unit == "psi": return value / 0.000145038
+
+def to_psig(value, unit):
+    """Convert a GAUGE pressure in any unit directly to psig (for design P override)."""
+    if unit == "psig": return value
+    if unit == "barg": return value * 14.5038
+    if unit == "atg":  return value * 14.6959
+    # psi gauge is the same as psig
+    return value
+
+
+# ── Page config ──────────────────────────────────────────────────────────────
 st.set_page_config(page_title="Pressure Vessel Estimator", page_icon="⚙️", layout="wide")
 
 st.title("⚙️ Pressure Vessel Weight Estimator")
@@ -29,24 +56,88 @@ st.markdown(
 )
 st.divider()
 
-# ── Session state initialisation ────────────────────────────────────────────
+# ── Session state ─────────────────────────────────────────────────────────────
 if "vessel_inventory" not in st.session_state:
-    st.session_state.vessel_inventory = []   # list of result dicts
+    st.session_state.vessel_inventory = []
 if "last_result" not in st.session_state:
     st.session_state.last_result = None
 
 MATERIAL_OPTIONS = {k: v['name'] for k, v in MATERIALS.items()}
 
-# ── Sidebar ──────────────────────────────────────────────────────────────────
+# ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.header("📋 Vessel Inputs")
     name = st.text_input("Equipment reference name", value="PV-001")
 
-    st.subheader("Operating Conditions")
-    T_op_K  = st.number_input("Operating temperature (K)", min_value=273.15, max_value=1500.0, value=303.15, step=1.0)
-    P_op_Pa = st.number_input("Operating pressure, absolute (Pa)", min_value=0.0, max_value=1e8,
-                               value=101325.0, step=1000.0, format="%.2f")
+    # ── Temperature input ────────────────────────────────────────────────────
+    st.subheader("Temperature")
+    temp_mode = st.radio(
+        "Input type",
+        ["Operating temperature", "Design temperature (direct)"],
+        key="temp_mode",
+        help="Operating → design T = T_op + 50°F applied automatically.\n"
+             "Design (direct) → value used as-is for stress lookup, no margin added."
+    )
+    temp_unit = st.selectbox("Unit", ["K", "°C", "°F"], key="temp_unit")
 
+    # Sensible defaults per unit
+    _t_defaults = {"K": 303.15, "°C": 30.0, "°F": 86.0}
+    temp_value = st.number_input(
+        f"{'Operating' if temp_mode == 'Operating temperature' else 'Design'} temperature ({temp_unit})",
+        value=_t_defaults[temp_unit],
+        step=1.0,
+        format="%.2f",
+        key="temp_value"
+    )
+
+    # Resolve to what the engine needs
+    if temp_mode == "Operating temperature":
+        T_op_K         = to_kelvin(temp_value, temp_unit)
+        T_d_F_override = None
+    else:
+        # Design temperature entered directly — store a nominal T_op_K too
+        T_d_F_override = to_fahrenheit(temp_value, temp_unit)
+        # Back-calculate an approximate T_op_K just for display (T_d - 50°F)
+        T_op_K = to_kelvin(temp_value, temp_unit)   # still passed; engine uses override
+
+    # ── Pressure input ───────────────────────────────────────────────────────
+    st.subheader("Pressure")
+    press_mode = st.radio(
+        "Input type",
+        ["Operating pressure (absolute)", "Design pressure (direct)"],
+        key="press_mode",
+        help="Operating → design P calculated via Sandler & Luckiewicz correlation.\n"
+             "Design (direct) → gauge value used as-is, correlation skipped."
+    )
+
+    if press_mode == "Operating pressure (absolute)":
+        press_unit = st.selectbox("Unit", ["Pa", "bar", "atm", "psi"], key="press_unit")
+        _p_defaults = {"Pa": 101325.0, "bar": 1.01325, "atm": 1.0, "psi": 14.696}
+        press_value = st.number_input(
+            f"Operating pressure ({press_unit}, absolute)",
+            value=_p_defaults[press_unit],
+            min_value=0.0,
+            format="%.4f",
+            key="press_value"
+        )
+        P_op_Pa         = to_pascal_abs(press_value, press_unit)
+        P_d_psig_override = None
+    else:
+        press_unit = st.selectbox("Unit", ["psig", "barg", "atg"], key="press_unit_d",
+                                   help="Gauge pressure units — atmospheric reference already subtracted.")
+        _p_defaults_g = {"psig": 0.0, "barg": 0.0, "atg": 0.0}
+        press_value = st.number_input(
+            f"Design pressure ({press_unit}, gauge)",
+            value=_p_defaults_g[press_unit],
+            min_value=0.0,
+            format="%.4f",
+            key="press_value_d"
+        )
+        P_d_psig_override = to_psig(press_value, press_unit)
+        # Still need a nominal P_op_Pa for the results dict — use atm as placeholder
+        P_op_Pa = 101325.0
+
+    # ── Geometry ─────────────────────────────────────────────────────────────
     st.subheader("Geometry")
     geom_mode = st.radio("Geometry input mode", ["Volume only", "Length and Diameter"])
     if geom_mode == "Volume only":
@@ -57,14 +148,21 @@ with st.sidebar:
         L_input = st.number_input("Shell length, L (m)", min_value=0.01, value=5.0, step=0.1)
         D_input = st.number_input("Inside diameter, D (m)", min_value=0.01, value=1.5, step=0.1)
 
+    # ── Design parameters ────────────────────────────────────────────────────
     st.subheader("Design Parameters")
-    material_key  = st.selectbox("Material of construction", options=list(MATERIAL_OPTIONS.keys()),
-                                  format_func=lambda k: MATERIAL_OPTIONS[k], index=4)
+    material_key  = st.selectbox(
+        "Material of construction",
+        options=list(MATERIAL_OPTIONS.keys()),
+        format_func=lambda k: MATERIAL_OPTIONS[k],
+        index=4
+    )
     configuration = st.selectbox("Configuration", ["Vertical", "Horizontal"])
     corrosion     = st.selectbox("Corrosive service?", ["Yes", "No"]) == "Yes"
-    weld_eff      = st.selectbox("Weld joint efficiency", [1.0, 0.85, 0.70],
-                                  format_func=lambda x: f"{x:.2f}  ({'Full' if x==1.0 else 'Spot' if x==0.85 else 'None'})")
-    n_units       = st.number_input("Number of units", min_value=1, max_value=500, value=1, step=1)
+    weld_eff      = st.selectbox(
+        "Weld joint efficiency", [1.0, 0.85, 0.70],
+        format_func=lambda x: f"{x:.2f}  ({'Full' if x==1.0 else 'Spot' if x==0.85 else 'None'})"
+    )
+    n_units = st.number_input("Number of units", min_value=1, max_value=500, value=1, step=1)
 
     st.divider()
     col_calc, col_add = st.columns(2)
@@ -72,30 +170,39 @@ with st.sidebar:
     add_btn   = col_add.button( "＋ Add to List", type="secondary", use_container_width=True)
 
 
-# ── Helper: run the engine ───────────────────────────────────────────────────
+# ── Helper ────────────────────────────────────────────────────────────────────
 def run_calculation():
     return design_pressure_vessel(
-        T_op_K=T_op_K, P_op_Pa=P_op_Pa, material=material_key,
-        configuration=configuration.lower(), corrosion=corrosion,
-        weld_efficiency=weld_eff, volume=volume, L=L_input, D=D_input,
+        T_op_K=T_op_K, P_op_Pa=P_op_Pa,
+        material=material_key,
+        configuration=configuration.lower(),
+        corrosion=corrosion,
+        weld_efficiency=weld_eff,
+        volume=volume, L=L_input, D=D_input,
         n_units=int(n_units), name=name,
+        T_d_F_override=T_d_F_override,
+        P_d_psig_override=P_d_psig_override,
     )
 
 
-# ── Button logic ─────────────────────────────────────────────────────────────
+# ── Button logic ──────────────────────────────────────────────────────────────
 if calculate or add_btn:
     try:
         r = run_calculation()
         st.session_state.last_result = r
         if add_btn:
             st.session_state.vessel_inventory.append(r)
-            st.toast(f"✅ {r['name']} added to inventory ({len(st.session_state.vessel_inventory)} vessels total)", icon="✅")
+            st.toast(
+                f"✅ {r['name']} added to inventory "
+                f"({len(st.session_state.vessel_inventory)} vessels total)",
+                icon="✅"
+            )
     except ValueError as e:
         st.error(f"⚠️ Design error: {e}")
         st.session_state.last_result = None
 
 
-# ── Individual result panel ──────────────────────────────────────────────────
+# ── Individual result panel ───────────────────────────────────────────────────
 r = st.session_state.last_result
 
 if r is not None:
@@ -107,29 +214,61 @@ if r is not None:
     col4.metric("Total Weight/unit", f"{r['W_total_lb']:,.0f} lb", f"{r['W_total_lb']*0.453592/1000:.1f} t")
 
     if r['n_units'] > 1:
-        st.info(f"**{r['n_units']} units** → All units total: "
-                f"**{r['W_total_all_units_lb']:,.0f} lb "
-                f"({r['W_total_all_units_lb']*0.453592/1000:.1f} t)**")
+        st.info(
+            f"**{r['n_units']} units** → All units total: "
+            f"**{r['W_total_all_units_lb']:,.0f} lb "
+            f"({r['W_total_all_units_lb']*0.453592/1000:.1f} t)**"
+        )
 
     st.divider()
     col_a, col_b = st.columns(2)
+
     with col_a:
         st.markdown("#### 🌡️ Design Conditions")
-        st.table({"Parameter": ["Operating temperature", "Design temperature",
-                                 "Operating pressure (gauge)", "Design pressure",
-                                 "Allowable stress (S)", "Weld efficiency (E)"],
-                  "Value": [f"{r['T_op_K']:.2f} K ({r['T_op_F']:.1f} °F)",
-                             f"{r['T_d_F']:.1f} °F",
-                             f"{r['P_op_psig']:.2f} psig",
-                             f"{r['P_d_psig']:.2f} psig",
-                             f"{r['S_psi']:,.0f} psi ({r['S_psi']/1000:.1f} ksi)",
-                             f"{r['weld_efficiency']:.2f}"]})
+        # Build the temperature rows dynamically based on input mode
+        if r.get('direct_T_d'):
+            t_rows = {
+                "Parameter": ["Design temperature (direct input)", "Allowable stress (S)", "Weld efficiency (E)"],
+                "Value": [
+                    f"{r['T_d_F']:.1f} °F",
+                    f"{r['S_psi']:,.0f} psi ({r['S_psi']/1000:.1f} ksi)",
+                    f"{r['weld_efficiency']:.2f}"
+                ]
+            }
+            st.info("ℹ️ Design temperature entered directly — +50°F margin step skipped.")
+        else:
+            t_rows = {
+                "Parameter": ["Operating temperature", "Design temperature (T_op + 50°F)",
+                               "Allowable stress (S)", "Weld efficiency (E)"],
+                "Value": [
+                    f"{r['T_op_K']:.2f} K ({r['T_op_F']:.1f} °F)",
+                    f"{r['T_d_F']:.1f} °F",
+                    f"{r['S_psi']:,.0f} psi ({r['S_psi']/1000:.1f} ksi)",
+                    f"{r['weld_efficiency']:.2f}"
+                ]
+            }
+
+        # Append pressure rows
+        if r.get('direct_P_d'):
+            t_rows["Parameter"] += ["Design pressure (direct input)", "Operating pressure (gauge)"]
+            t_rows["Value"]     += [f"{r['P_d_psig']:.2f} psig", f"{r['P_op_psig']:.2f} psig"]
+            st.info("ℹ️ Design pressure entered directly — S&L correlation step skipped.")
+        else:
+            t_rows["Parameter"] += ["Operating pressure (gauge)", "Design pressure (S&L corr.)"]
+            t_rows["Value"]     += [f"{r['P_op_psig']:.2f} psig", f"{r['P_d_psig']:.2f} psig"]
+
+        st.table(t_rows)
+
         st.markdown("#### 📐 Geometry")
-        st.table({"Parameter": ["L/D ratio", "Inside diameter (Dᵢ)", "Shell length (L)", "Volume"],
-                  "Value": [str(r['LD_ratio']),
-                             f"{r['D_m']:.4f} m ({m_to_in(r['D_m']):.3f} in, {m_to_ft(r['D_m']):.3f} ft)",
-                             f"{r['L_m']:.4f} m ({m_to_in(r['L_m']):.3f} in)",
-                             f"{r['V_m3']:.4f} m³"]})
+        st.table({
+            "Parameter": ["L/D ratio", "Inside diameter (Dᵢ)", "Shell length (L)", "Volume"],
+            "Value": [
+                str(r['LD_ratio']),
+                f"{r['D_m']:.4f} m ({m_to_in(r['D_m']):.3f} in, {m_to_ft(r['D_m']):.3f} ft)",
+                f"{r['L_m']:.4f} m ({m_to_in(r['L_m']):.3f} in)",
+                f"{r['V_m3']:.4f} m³"
+            ]
+        })
 
     with col_b:
         st.markdown("#### 🔩 Wall Thickness")
@@ -139,26 +278,42 @@ if r is not None:
             tw_p += ["t_wind/seismic (t_w)", "t_design = tₛ + t_w/2"]
             tw_v += [f"{r['t_w_in']:.4f} in", f"{r['t_design_in']:.4f} in"]
         tw_p += ["Corrosion allowance", "Before rounding", "t_TOTAL (std plate)"]
-        tw_v += [f"{r['t_corr_in']:.4f} in ({r['t_corr_in']*25.4:.2f} mm)",
-                 f"{r['t_before_round_in']:.4f} in",
-                 f"{r['t_total_in']:.4f} in ({r['t_total_in']*25.4:.2f} mm)"]
+        tw_v += [
+            f"{r['t_corr_in']:.4f} in ({r['t_corr_in']*25.4:.2f} mm)",
+            f"{r['t_before_round_in']:.4f} in",
+            f"{r['t_total_in']:.4f} in ({r['t_total_in']*25.4:.2f} mm)"
+        ]
         st.table({"Parameter": tw_p, "Value": tw_v})
 
         st.markdown("#### ⚖️ Weight")
-        st.table({"Parameter": ["Material density (ρ)", "Shell weight (Eq. 16.59)",
-                                 "Weight allowance", "Total weight/unit"],
-                  "Value": [f"{MATERIALS[material_key]['density']} lb/in³",
-                             f"{r['W_shell_lb']:,.1f} lb",
-                             f"+{int(round((r['W_total_lb']/r['W_shell_lb']-1)*100))}%",
-                             f"{r['W_total_lb']:,.1f} lb ({r['W_total_lb']*0.453592/1000:.2f} t)"]})
+        st.table({
+            "Parameter": ["Material density (ρ)", "Shell weight (Eq. 16.59)",
+                          "Weight allowance", "Total weight/unit"],
+            "Value": [
+                f"{MATERIALS[material_key]['density']} lb/in³",
+                f"{r['W_shell_lb']:,.1f} lb",
+                f"+{int(round((r['W_total_lb']/r['W_shell_lb']-1)*100))}%",
+                f"{r['W_total_lb']:,.1f} lb ({r['W_total_lb']*0.453592/1000:.2f} t)"
+            ]
+        })
 
     with st.expander("🔍 Step-by-step calculation summary"):
+        t_line = (
+            f"Design temperature entered directly: **{r['T_d_F']:.1f}°F** (+50°F step skipped)"
+            if r.get('direct_T_d')
+            else f"{r['T_op_F']:.1f}°F + 50°F = **{r['T_d_F']:.1f}°F**"
+        )
+        p_line = (
+            f"Design pressure entered directly: **{r['P_d_psig']:.2f} psig** (S&L step skipped)"
+            if r.get('direct_P_d')
+            else f"P_op(gauge)={r['P_op_psig']:.2f} psig → P_design=**{r['P_d_psig']:.2f} psig**"
+        )
         st.markdown(f"""
-**Step 1 — Design Pressure:** P_op(gauge)={r['P_op_psig']:.2f} psig → P_design=**{r['P_d_psig']:.2f} psig**
-**Step 2 — Design Temperature:** {r['T_op_F']:.1f}°F + 50°F = **{r['T_d_F']:.1f}°F**
+**Step 1 — Design Pressure:** {p_line}
+**Step 2 — Design Temperature:** {t_line}
 **Step 3 — Allowable Stress:** ceiling bracket ≥ T_design → **S={r['S_psi']:,.0f} psi**
 **Step 4 — Geometry:** L/D={r['LD_ratio']} → D_i=**{r['D_m']:.4f} m**, L=**{r['L_m']:.4f} m**
-**Step 5 — Wall Thickness:** tₚ={r['t_p_in']:.4f} in, t_min={r['t_min_in']:.4f} in, tₛ=**{r['t_s_in']:.4f} in**{(chr(10)+'t_w='+f"{r['t_w_in']:.4f} in, t_design=**"+f"{r['t_design_in']:.4f} in**") if r['t_w_in'] else ''}
+**Step 5 — Wall Thickness:** tₚ={r['t_p_in']:.4f} in, t_min={r['t_min_in']:.4f} in, tₛ=**{r['t_s_in']:.4f} in**{(chr(10)+'**t_w='+f"{r['t_w_in']:.4f} in, t_design="+f"{r['t_design_in']:.4f} in**") if r['t_w_in'] else ''}
 **Step 6 — Corrosion:** +{r['t_corr_in']:.4f} in → before rounding={r['t_before_round_in']:.4f} in
 **Step 7 — Plate rounding:** → **t_TOTAL={r['t_total_in']:.4f} in ({r['t_total_in']*25.4:.2f} mm)**
 **Step 8 — Weight:** W_shell={r['W_shell_lb']:,.0f} lb → **W_total={r['W_total_lb']:,.0f} lb/unit**
@@ -184,52 +339,46 @@ else:
         """)
 
 
-# ── Vessel Inventory summary table ──────────────────────────────────────────
+# ── Vessel Inventory ──────────────────────────────────────────────────────────
 inventory = st.session_state.vessel_inventory
 
 if inventory:
     st.divider()
     st.subheader(f"📦 Vessel Inventory — {len(inventory)} vessel(s)")
 
-    # Build display rows
     rows = []
     for v in inventory:
         rows.append({
-            "Name":               v["name"],
-            "Material":           v["material"],
-            "Config.":            v["configuration"].capitalize(),
-            "V (m³)":             round(v["V_m3"], 3),
-            "D_i (m)":            round(v["D_m"], 4),
-            "L (m)":              round(v["L_m"], 4),
-            "P_d (psig)":         round(v["P_d_psig"], 2),
-            "t_total (in)":       round(v["t_total_in"], 4),
-            "t_total (mm)":       round(v["t_total_in"] * 25.4, 2),
-            "W_shell (lb)":       round(v["W_shell_lb"], 0),
-            "W_total/unit (lb)":  round(v["W_total_lb"], 0),
-            "No. units":          v["n_units"],
-            "W_all units (lb)":   round(v["W_total_all_units_lb"], 0),
-            "W_all units (t)":    round(v["W_total_all_units_lb"] * 0.453592 / 1000, 2),
+            "Name":              v["name"],
+            "Material":          v["material"],
+            "Config.":           v["configuration"].capitalize(),
+            "V (m³)":            round(v["V_m3"], 3),
+            "D_i (m)":           round(v["D_m"], 4),
+            "L (m)":             round(v["L_m"], 4),
+            "P_d (psig)":        round(v["P_d_psig"], 2),
+            "T_d (°F)":          round(v["T_d_F"], 1),
+            "t_total (in)":      round(v["t_total_in"], 4),
+            "t_total (mm)":      round(v["t_total_in"] * 25.4, 2),
+            "W_shell (lb)":      round(v["W_shell_lb"], 0),
+            "W_total/unit (lb)": round(v["W_total_lb"], 0),
+            "No. units":         v["n_units"],
+            "W_all units (lb)":  round(v["W_total_all_units_lb"], 0),
+            "W_all units (t)":   round(v["W_total_all_units_lb"] * 0.453592 / 1000, 2),
         })
 
     df = pd.DataFrame(rows)
-
-    # Grand total row
     grand_lb = sum(v["W_total_all_units_lb"] for v in inventory)
     grand_t  = grand_lb * 0.453592 / 1000
 
     st.dataframe(df, use_container_width=True, hide_index=True)
 
-    # Grand total metrics
     n_total_units = sum(v["n_units"] for v in inventory)
     col_t1, col_t2, col_t3 = st.columns(3)
-    col_t1.metric("Total vessels (types)",   len(inventory))
-    col_t2.metric("Total units",             n_total_units)
-    col_t3.metric("Grand total weight",      f"{grand_lb:,.0f} lb  ({grand_t:,.1f} t)")
+    col_t1.metric("Total vessels (types)", len(inventory))
+    col_t2.metric("Total units",           n_total_units)
+    col_t3.metric("Grand total weight",    f"{grand_lb:,.0f} lb  ({grand_t:,.1f} t)")
 
-    # Action buttons row
     col_csv, col_clr, _ = st.columns([1, 1, 3])
-
-    # CSV export
     csv_buffer = io.StringIO()
     df.to_csv(csv_buffer, index=False)
     col_csv.download_button(
@@ -239,8 +388,6 @@ if inventory:
         mime="text/csv",
         use_container_width=True,
     )
-
-    # Clear inventory
     if col_clr.button("🗑️ Clear Inventory", use_container_width=True):
         st.session_state.vessel_inventory = []
         st.session_state.last_result = None
