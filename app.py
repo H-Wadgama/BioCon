@@ -346,9 +346,10 @@ if inventory:
     st.divider()
     st.subheader(f"📦 Vessel Inventory — {len(inventory)} vessel(s)")
 
-    rows = []
+    # ── Screen display rows (unchanged units) ────────────────────────────────
+    display_rows = []
     for v in inventory:
-        rows.append({
+        display_rows.append({
             "Name":              v["name"],
             "Material":          v["material"],
             "Config.":           v["configuration"].capitalize(),
@@ -366,11 +367,29 @@ if inventory:
             "W_all units (t)":   round(v["W_total_all_units_lb"] * 0.453592 / 1000, 2),
         })
 
-    df = pd.DataFrame(rows)
+    # ── CSV export rows (specified units + clear column titles) ───────────────
+    export_rows = []
+    for v in inventory:
+        export_rows.append({
+            "Equipment Name":                     v["name"],
+            "Material":                           v["material"],
+            "Configuration":                      v["configuration"].capitalize(),
+            "Volume (m³)":                        round(v["V_m3"], 3),
+            "Internal Diameter (ft)":             round(m_to_ft(v["D_m"]), 4),
+            "Tangent to Tangent Length (ft)":     round(m_to_ft(v["L_m"]), 4),
+            "Total Wall Thickness (in)":          round(v["t_total_in"], 4),
+            "Vessel Weight per Unit (kg)":        round(v["W_total_lb"] * 0.453592, 1),
+            "Number of Units":                    v["n_units"],
+            "Total Weight All Units (kg)":        round(v["W_total_all_units_lb"] * 0.453592, 1),
+        })
+
+    df_display = pd.DataFrame(display_rows)
+    df_export  = pd.DataFrame(export_rows)
+
     grand_lb = sum(v["W_total_all_units_lb"] for v in inventory)
     grand_t  = grand_lb * 0.453592 / 1000
 
-    st.dataframe(df, use_container_width=True, hide_index=True)
+    st.dataframe(df_display, use_container_width=True, hide_index=True)
 
     n_total_units = sum(v["n_units"] for v in inventory)
     col_t1, col_t2, col_t3 = st.columns(3)
@@ -380,7 +399,7 @@ if inventory:
 
     col_csv, col_clr, _ = st.columns([1, 1, 3])
     csv_buffer = io.StringIO()
-    df.to_csv(csv_buffer, index=False)
+    df_export.to_csv(csv_buffer, index=False)
     col_csv.download_button(
         label="⬇️ Export CSV",
         data=csv_buffer.getvalue(),
