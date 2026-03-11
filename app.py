@@ -143,10 +143,18 @@ with st.sidebar:
     if geom_mode == "Volume only":
         volume  = st.number_input("Total volume (m³)", min_value=0.01, value=10.0, step=1.0)
         L_input = D_input = None
+        internals_allowance_pct = 0.0
     else:
         volume  = None
         L_input = st.number_input("Shell length, L (m)", min_value=0.01, value=5.0, step=0.1)
         D_input = st.number_input("Inside diameter, D (m)", min_value=0.01, value=1.5, step=0.1)
+        internals_allowance_pct = st.number_input(
+            "Internals volume allowance (%)",
+            min_value=0.0, max_value=100.0, value=0.0, step=1.0,
+            help="Extra volume added on top of the geometric volume (π/4 · D² · L) to "
+                 "account for vessel internals (e.g. trays, packing, coils). "
+                 "The inflated volume is then used to recalculate design D and L."
+        )
 
     # ── Design parameters ────────────────────────────────────────────────────
     st.subheader("Design Parameters")
@@ -172,17 +180,46 @@ with st.sidebar:
 
 # ── Helper ────────────────────────────────────────────────────────────────────
 def run_calculation():
-    return design_pressure_vessel(
+    import math as _math
+
+    # When L & D are given with an internals allowance:
+    #   - Compute geometric volume from the user's L and D
+    #   - Inflate it by the allowance % — this larger volume drives the
+    #     thickness/weight calculations inside the engine
+    #   - After the engine returns, restore D_m and L_m to the original
+    #     user-entered values, because the physical vessel shell dimensions
+    #     do not change — the extra volume is purely for internals
+    if L_input is not None and D_input is not None and internals_allowance_pct > 0.0:
+        V_geometric = _math.pi / 4 * D_input**2 * L_input
+        V_inflated  = V_geometric * (1 + internals_allowance_pct / 100.0)
+        call_volume, call_L, call_D = V_inflated, None, None
+    else:
+        V_geometric = None
+        V_inflated  = None
+        call_volume, call_L, call_D = volume, L_input, D_input
+
+    r = design_pressure_vessel(
         T_op_K=T_op_K, P_op_Pa=P_op_Pa,
         material=material_key,
         configuration=configuration.lower(),
         corrosion=corrosion,
         weld_efficiency=weld_eff,
-        volume=volume, L=L_input, D=D_input,
+        volume=call_volume, L=call_L, D=call_D,
         n_units=int(n_units), name=name,
         T_d_F_override=T_d_F_override,
         P_d_psig_override=P_d_psig_override,
     )
+
+    # Restore original L and D — the shell dimensions are fixed by the user's input
+    if L_input is not None and D_input is not None:
+        r['D_m'] = D_input
+        r['L_m'] = L_input
+
+    # Store allowance info in results for display in step-by-step summary
+    r['internals_allowance_pct'] = internals_allowance_pct
+    r['V_geometric_m3']          = V_geometric
+    r['V_inflated_m3']           = V_inflated
+    return r
 
 
 # ── Button logic ──────────────────────────────────────────────────────────────
@@ -312,7 +349,12 @@ if r is not None:
 **Step 1 — Design Pressure:** {p_line}
 **Step 2 — Design Temperature:** {t_line}
 **Step 3 — Allowable Stress:** ceiling bracket ≥ T_design → **S={r['S_psi']:,.0f} psi**
-**Step 4 — Geometry:** L/D={r['LD_ratio']} → D_i=**{r['D_m']:.4f} m**, L=**{r['L_m']:.4f} m**
+**Step 4 — Geometry:** L/D={r['LD_ratio']} → D_i=**{r['D_m']:.4f} m**, L=**{r['L_m']:.4f} m**{
+    (chr(10) + f"  *Internals allowance: geometric V={r['V_geometric_m3']:.4f} m³ × "
+               f"(1 + {r['internals_allowance_pct']:.1f}%) = **{r['V_inflated_m3']:.4f} m³** used for design*")
+    if r.get('V_inflated_m3') is not None else
+    (chr(10) + f"  Volume = **{r['V_m3']:.4f} m³**")
+}
 **Step 5 — Wall Thickness:** tₚ={r['t_p_in']:.4f} in, t_min={r['t_min_in']:.4f} in, tₛ=**{r['t_s_in']:.4f} in**{(chr(10)+'**t_w='+f"{r['t_w_in']:.4f} in, t_design="+f"{r['t_design_in']:.4f} in**") if r['t_w_in'] else ''}
 **Step 6 — Corrosion:** +{r['t_corr_in']:.4f} in → before rounding={r['t_before_round_in']:.4f} in
 **Step 7 — Plate rounding:** → **t_TOTAL={r['t_total_in']:.4f} in ({r['t_total_in']*25.4:.2f} mm)**
@@ -375,6 +417,7 @@ if inventory:
             "Material":                           v["material"],
             "Configuration":                      v["configuration"].capitalize(),
             "Volume (m³)":                        round(v["V_m3"], 3),
+            "Internals Allowance (%)":            v.get("internals_allowance_pct", 0.0),
             "Internal Diameter (ft)":             round(m_to_ft(v["D_m"]), 4),
             "Tangent to Tangent Length (ft)":     round(m_to_ft(v["L_m"]), 4),
             "Total Wall Thickness (in)":          round(v["t_total_in"], 4),
