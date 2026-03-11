@@ -40,7 +40,7 @@ MATERIALS = {
     'SS304':    {'name': 'Stainless steel 304',            'max_temp_F': 1500, 'stress_ksi': [20.0, 15.0, 12.9, 11.7, 10.8], 'density': 0.286,  'is_alloy': True},
     'SS347':    {'name': 'Stainless steel 347',            'max_temp_F': 1500, 'stress_ksi': [20.0, 17.1, 15.0, 13.8, 13.4], 'density': 0.283,  'is_alloy': True},
     'SS321':    {'name': 'Stainless steel 321',            'max_temp_F': 1500, 'stress_ksi': [20.0, 16.5, 14.3, 13.0, 12.3], 'density': 0.283,  'is_alloy': True},
-    'SS316':    {'name': 'Stainless steel 316',            'max_temp_F': 1500, 'stress_ksi': [20.0, 15.6, 13.3, 12.1, 11.5], 'density': 0.283,  'is_alloy': True},
+    'SS316':    {'name': 'Stainless steel 316',            'max_temp_F': 1500, 'stress_ksi': [20.0, 15.6, 13.3, 12.1, 11.5], 'density': 0.286,  'is_alloy': True},
 }
 
 STRESS_TEMPS_F = [100, 300, 500, 700, 900]
