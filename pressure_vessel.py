@@ -207,10 +207,20 @@ def design_pressure_vessel(
     S_psi = allowable_stress_psi(material, T_d_F)
     results['S_psi'] = S_psi
 
-    ld = ld_ratio(P_d_psig)
-    results['LD_ratio'] = ld
+    if L is not None and D is not None:
+        # L and D supplied directly — use as-is for all calculations.
+        # L/D ratio computed from actual dimensions (rounded to nearest int),
+        # stored for reference only; does not drive geometry.
+        L_m  = L
+        D_m  = D
+        V_m3 = math.pi * (D_m / 2)**2 * L_m
+        ld   = round(L_m / D_m)
+    else:
+        # Volume supplied — L/D from pressure lookup drives geometry (unchanged).
+        ld = ld_ratio(P_d_psig)
+        L_m, D_m, V_m3 = compute_LDV(volume, None, None, ld)
 
-    L_m, D_m, V_m3 = compute_LDV(volume, L, D, ld)
+    results['LD_ratio'] = ld
     results.update({'L_m': L_m, 'D_m': D_m, 'V_m3': V_m3})
 
     D_i_in = m_to_in(D_m)
