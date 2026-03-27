@@ -195,39 +195,66 @@ def plot_contour(
     construction_emissions_g: float,
     output_path: str = "construction_share_contour.png",
 ):
-    fig, ax = plt.subplots(figsize=(9, 6))
+    # ── Figure dimensions: 240 × 170 px at 96 DPI = 2.5" × 1.77"
+    #    Export at 300 DPI → 750 × 531 px PNG ─────────────────────
+    DPI        = 300
+    FIG_W_IN   = 2.5
+    FIG_H_IN   = 1.771
+
+    # ── Font sizes scaled to single-column figure ─────────────────
+    FS_TITLE      = 6.0
+    FS_AXLABEL    = 6.5
+    FS_TICK       = 6.5
+    FS_CLABEL     = 5.5
+    FS_CBAR_LABEL = 6.0
+    FS_LEGEND     = 6.0
+
+    import matplotlib as mpl
+    import matplotlib.font_manager as fm
+    for _p in ["/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+               "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"]:
+        try: fm.fontManager.addfont(_p)
+        except Exception: pass
+    mpl.rcParams["font.family"] = "sans-serif"
+    mpl.rcParams["font.sans-serif"] = ["Arial", "Liberation Sans", "DejaVu Sans"]
+
+    fig, ax = plt.subplots(figsize=(FIG_W_IN, FIG_H_IN))
 
     OF, LT = np.meshgrid(of_vals, lt_vals)
 
     levels = np.arange(2, 28, 2)
     cf = ax.contourf(OF, LT, Z_pct, levels=levels, cmap="YlOrRd", extend="neither")
-    cs = ax.contour(OF, LT, Z_pct, levels=levels, colors="black", linewidths=0.7, alpha=0.6)
-    ax.clabel(cs, fmt="%.1f%%", fontsize=8, inline=True)
+    cs = ax.contour(OF, LT, Z_pct, levels=levels, colors="black", linewidths=0.2, alpha=0.6)
+    ax.clabel(cs, fmt="%.0f%%", fontsize=FS_CLABEL, inline=True)
 
-    ax.plot(0.9, 30, marker="*", markersize=14, color="white",
-            markeredgecolor="black", markeredgewidth=0.8, zorder=5,
-            label="Base case (OF=0.9, LT=30 yr)")
+    ax.plot(0.9, 30, marker="*", markersize=3, color="white",
+            markeredgecolor="black", markeredgewidth=0.4, zorder=5,
+            label="Base case\n(OF=0.9, LT=30 yr)")
 
-    cbar = fig.colorbar(cf, ax=ax, pad=0.02)
-    cbar.set_label("Construction share of total lifecycle emissions (%)", fontsize=10)
+    cbar = fig.colorbar(cf, ax=ax, pad=0.03)
+    cbar.set_label("Construction share (%)", fontsize=FS_CBAR_LABEL)
+    cbar.ax.tick_params(labelsize=FS_TICK, width=0.3, length=1.5)
 
-    ax.set_xlabel("Operating Factor", fontsize=11)
-    ax.set_ylabel("Biorefinery Lifetime (years)", fontsize=11)
-    ax.set_title(
-        "Construction Phase Share of Total Lifecycle CO₂e Emissions\n"
-        f"Construction = {construction_emissions_g:.4e} gCO₂e  |  "
-        f"Gasoline: 55.8 GGE/t @ 9.2 gCO₂e/MJ  |  Diesel: 19.1 GGE/t @ 9.3 gCO₂e/MJ",
-        fontsize=9,
-    )
+    ax.set_xlabel("Operating Factor", fontsize=FS_AXLABEL)
+    ax.set_ylabel("Biorefinery Lifetime (years)", fontsize=FS_AXLABEL)
+    ax.set_title("Dutta et al. (2015) — Construction Share of Lifecycle CO₂e",
+                 fontsize=FS_TITLE)
     ax.set_xlim(of_vals[0], of_vals[-1])
     ax.set_ylim(lt_vals[0], lt_vals[-1])
     ax.xaxis.set_major_formatter(ticker.FormatStrFormatter("%.2f"))
-    ax.legend(fontsize=9, loc="upper right")
+    ax.tick_params(axis="both", labelsize=FS_TICK, width=0.3, length=1.5)
+    ax.legend(fontsize=FS_LEGEND, loc="upper right",
+              handlelength=0.8, borderpad=0.4, labelspacing=0.3)
+    for spine in ax.spines.values():
+        spine.set_linewidth(0.3)
 
-    plt.tight_layout()
-    plt.savefig(output_path, dpi=150, bbox_inches="tight")
+    plt.subplots_adjust(left=0.14, right=0.80, top=0.88, bottom=0.18)
+    plt.savefig(output_path, dpi=DPI)
+    svg_path = output_path.rsplit(".", 1)[0] + ".svg"
+    plt.savefig(svg_path, format="svg")
     plt.close()
     print(f"\n  Plot saved → {output_path}")
+    print(f"  Plot saved → {svg_path}")
 
 
 # ── Summary printer ───────────────────────────────────────────────────────────
