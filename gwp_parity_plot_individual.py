@@ -36,22 +36,26 @@ from scipy import stats
 # ==============================================================================
 CASE_STUDIES = [
     {
-        "label":    "Dutta et al. (2015)",
-        "filename": "gwp_parity_plot_dutta_2015",
+        "label":    "Dutta et al. (2015) — in-situ pyrolysis",
+        "filename": "gwp_parity_plot_dutta_2015_insitu",
         "color":    "#1D9E75",
         "edge":     "#0F6E56",
         "marker":   "o",
         "process": [
-            247000, 1710000, 688000, 247000, 120000, 112000, 39400, 17600,
-            54100,  3240,    3850,   3450,   23600,  4020,   4330,  2190,
-            3450,   23600,   373,    5060,   5060,   5060,   4460,  7070,
-            5900,   5900,    4540,
+            246871.43, 2406668.17, 970949.23, 246871.43, 119675.39,
+            112102.47, 39355.90,   17637.19,  54132.05,  3235.05,
+            3851.57,   3445.62,    23584.10,  4016.57,   4332.32,
+            2185.02,   3445.62,    23584.10,  372.85,    5063.56,
+            5063.56,   5063.56,    4458.98,   4317.80,   3602.95,
+            3602.95,   2769.10,
         ],
         "eio": [
-            201000,  2700000, 464000, 238000, 412000, 426000, 177000, 110000,
-            124000,  18900,   22100,  18400,  282000, 14600,  50000,  12600,
-            53300,   46500,   3260,   18800,  26300,  9690,   7650,   9150,
-            9520,    8950,    7220,
+            201000.00, 2700000.00, 464000.00, 238000.00, 412000.00,
+            426000.00, 177000.00,  110000.00, 124000.00, 18900.00,
+            22100.00,  18400.00,   282000.00, 14600.00,  50000.00,
+            12600.00,  5330.00,    46500.00,  3260.00,   18800.00,
+            26300.00,  9690.00,    7650.00,   9150.00,   9520.00,
+            8950.00,   7220.00,
         ],
     },
     {
@@ -76,13 +80,36 @@ CASE_STUDIES = [
             68700,   154000, 515000, 1570000, 80300, 100000, 166000,
         ],
     },
+    {
+        "label":    "Dutta et al. (2015) — ex-situ pyrolysis",
+        "filename": "gwp_parity_plot_dutta_2015_exsitu",
+        "color":    "#D85A30",
+        "edge":     "#993C1D",
+        "marker":   "^",
+        "process": [
+            119695.88, 112121.63, 39362.63, 17640.08,
+            246913.59, 1827541.32, 971114.55, 246913.59, 54141.32,
+            3235.62, 3852.16, 3446.06, 23588.10, 4017.32, 4333.10,
+            2185.49, 3446.06, 23588.10, 373.07,
+            5064.44, 5064.44, 5064.44, 4459.69,
+            4318.55, 3603.54, 3603.54, 2769.52,
+        ],
+        "eio": [
+            440097.41, 421959.31, 181041.27, 178388.37,
+            207835.04, 1951463.35, 800119.43, 237377.33, 118266.73,
+            22358.26, 26246.47, 17948.80, 229202.88, 12771.65, 31383.97,
+            22956.09, 8308.16, 44350.75, 3543.82,
+            18971.87, 25590.72, 10063.94, 8326.04,
+            9235.61, 9791.07, 9145.82, 7791.57,
+        ],
+    },
     # -- Add further case studies here -----------------------------------------
     # {
-    #     "label":    "Case study 3",
-    #     "filename": "gwp_parity_plot_case3",
-    #     "color":    "#D85A30",
-    #     "edge":     "#993C1D",
-    #     "marker":   "^",
+    #     "label":    "Case study 4",
+    #     "filename": "gwp_parity_plot_case4",
+    #     "color":    "#7F77DD",
+    #     "edge":     "#534AB7",
+    #     "marker":   "D",
     #     "process":  [...],
     #     "eio":      [...],
     # },
@@ -92,20 +119,21 @@ CASE_STUDIES = [
 # 2. OUTPUT SETTINGS
 # ==============================================================================
 PNG_DPI  = 300
-# 240 px x 170 px at 96 DPI (Word) = 2.5" x 1.77"
-FIG_SIZE = (240 / 96, 170 / 96)   # (2.5, 1.771) inches
+# Each panel: 52mm x 65mm for a 170mm double-column artboard (3 panels side by side).
+# 3 x 52mm = 156mm, leaving 14mm for gaps and margins.
+# At 300 DPI: 614 x 768 px per panel.
+FIG_SIZE = (52 / 25.4, 65 / 25.4)   # (2.047, 2.559) inches
 
 # ==============================================================================
 # 3. STYLE SETTINGS
-# Fonts scaled up relative to figure size to remain legible in Word at
-# the target 240 x 170 px display dimensions.
+# Fonts tuned for 52x65mm panels in a 170mm double-column 3-up artboard.
 # ==============================================================================
-FONT_FAMILY   = "Verdana"
-AXIS_LABEL_FS = 6.5   # axis label font size (pt)
+FONT_FAMILY   = ["Arial", "Helvetica", "Verdana", "Liberation Sans"]
+AXIS_LABEL_FS = 7     # axis label font size (pt)
 TICK_FS       = 6.5   # tick label font size (pt)
 LEGEND_FS     = 6     # legend font size (pt)
 ANNOT_FS      = 6     # stats annotation font size (pt)
-POINT_SIZE    = 10    # scatter marker area (s= parameter)
+POINT_SIZE    = 8     # scatter marker area (s= parameter)
 POINT_ALPHA   = 0.80
 PARITY_COLOR  = "#555555"   # 1:1 line -- dense dots
 RATIO_COLOR   = None        # set per case study (matches scatter color)
@@ -218,14 +246,14 @@ def make_parity_plot(cs, s):
 
     # -- axis labels with correct CO2 subscript via mathtext ------------------
     ax.set_xlabel(r"Process-based GWP (kg CO$_2$ eq.)",
-                  fontsize=AXIS_LABEL_FS, labelpad=4)
-    ax.set_ylabel(r"EEIO-LCA GWP (kg CO$_2$ eq.)",
-                  fontsize=AXIS_LABEL_FS, labelpad=4)
+                  fontsize=AXIS_LABEL_FS, labelpad=3)
+    ax.set_ylabel(r"EEIO GWP (kg CO$_2$ eq.)",
+                  fontsize=AXIS_LABEL_FS, labelpad=3)
 
     # -- tick format: 10^2, 10^3, etc. ----------------------------------------
     ax.xaxis.set_major_formatter(ticker.LogFormatterMathtext())
     ax.yaxis.set_major_formatter(ticker.LogFormatterMathtext())
-    ax.tick_params(labelsize=TICK_FS, pad=2)
+    ax.tick_params(labelsize=TICK_FS, pad=1.5)
 
     # -- legend ---------------------------------------------------------------
     legend = ax.legend(fontsize=LEGEND_FS, frameon=True, framealpha=0.9,
@@ -250,10 +278,10 @@ def make_parity_plot(cs, s):
     )
 
     # -- title ----------------------------------------------------------------
-    ax.set_title(cs["label"], fontsize=6, fontweight="normal",
+    ax.set_title(cs["label"], fontsize=7, fontweight="normal",
                  pad=5, color="#333333")
 
-    plt.tight_layout(pad=0.8)
+    plt.tight_layout(pad=0.5)
 
     # -- export ---------------------------------------------------------------
     svg_path = cs["filename"] + ".svg"

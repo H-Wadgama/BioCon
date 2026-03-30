@@ -141,8 +141,8 @@ def plot_contour(of_vals, lt_vals, Z_pct, output_path="humbird_construction_shar
     # ── Figure dimensions: 240 × 170 px at 96 DPI = 2.5" × 1.77"
     #    Export at 300 DPI → 750 × 531 px PNG ─────────────────────
     DPI        = 300
-    FIG_W_IN   = 2.5
-    FIG_H_IN   = 1.771
+    FIG_W_IN   = 2.165
+    FIG_H_IN   = 1.535
 
     # ── Font sizes scaled to single-column figure ─────────────────
     FS_TITLE      = 6.0
@@ -181,7 +181,7 @@ def plot_contour(of_vals, lt_vals, Z_pct, output_path="humbird_construction_shar
 
     ax.set_xlabel("Operating Factor", fontsize=FS_AXLABEL)
     ax.set_ylabel("Biorefinery Lifetime (years)", fontsize=FS_AXLABEL)
-    ax.set_title("Humbird et al. (2011)", fontsize=FS_TITLE)
+    ax.set_title("Biochemical conversion to cellulosic ethanol", fontsize=FS_TITLE)
     ax.set_xlim(of_vals[0], of_vals[-1])
     ax.set_ylim(lt_vals[0], lt_vals[-1])
     ax.set_xticks([0.50, 0.60, 0.70, 0.80, 0.90])
@@ -192,7 +192,7 @@ def plot_contour(of_vals, lt_vals, Z_pct, output_path="humbird_construction_shar
     for spine in ax.spines.values():
         spine.set_linewidth(0.3)
 
-    plt.subplots_adjust(left=0.14, right=0.80, top=0.88, bottom=0.18)
+    plt.subplots_adjust(left=0.14, right=0.74, top=0.88, bottom=0.18)
     plt.savefig(output_path, dpi=DPI)
     svg_path = output_path.rsplit(".", 1)[0] + ".svg"
     plt.savefig(svg_path, format="svg")

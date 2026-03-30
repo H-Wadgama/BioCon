@@ -198,8 +198,8 @@ def plot_contour(
     # ── Figure dimensions: 240 × 170 px at 96 DPI = 2.5" × 1.77"
     #    Export at 300 DPI → 750 × 531 px PNG ─────────────────────
     DPI        = 300
-    FIG_W_IN   = 2.5
-    FIG_H_IN   = 1.771
+    FIG_W_IN   = 2.165
+    FIG_H_IN   = 1.535
 
     # ── Font sizes scaled to single-column figure ─────────────────
     FS_TITLE      = 6.0
@@ -237,10 +237,10 @@ def plot_contour(
 
     ax.set_xlabel("Operating Factor", fontsize=FS_AXLABEL)
     ax.set_ylabel("Biorefinery Lifetime (years)", fontsize=FS_AXLABEL)
-    ax.set_title("Dutta et al. (2015) — Construction Share of Lifecycle CO₂e",
-                 fontsize=FS_TITLE)
+    ax.set_title("In-situ pyrolysis to biofuels", fontsize=FS_TITLE)
     ax.set_xlim(of_vals[0], of_vals[-1])
     ax.set_ylim(lt_vals[0], lt_vals[-1])
+    ax.set_xticks([0.50, 0.60, 0.70, 0.80, 0.90])
     ax.xaxis.set_major_formatter(ticker.FormatStrFormatter("%.2f"))
     ax.tick_params(axis="both", labelsize=FS_TICK, width=0.3, length=1.5)
     ax.legend(fontsize=FS_LEGEND, loc="upper right",
@@ -248,7 +248,7 @@ def plot_contour(
     for spine in ax.spines.values():
         spine.set_linewidth(0.3)
 
-    plt.subplots_adjust(left=0.14, right=0.80, top=0.88, bottom=0.18)
+    plt.subplots_adjust(left=0.14, right=0.74, top=0.88, bottom=0.18)
     plt.savefig(output_path, dpi=DPI)
     svg_path = output_path.rsplit(".", 1)[0] + ".svg"
     plt.savefig(svg_path, format="svg")
@@ -295,7 +295,7 @@ def _print_summary(r: dict) -> None:
 
 if __name__ == "__main__":
 
-    CONSTRUCTION_G = 112_862_307_381.24   # gCO2e — fixed, from LCA
+    CONSTRUCTION_G = 111_851_341_698.12   # gCO2e — fixed, from LCA (updated)
 
     # ── 1. Base case ──────────────────────────────────────────────
     print("\n[1] BASE CASE OPERATIONAL EMISSIONS (OF=0.9, LT=30 yr)")
