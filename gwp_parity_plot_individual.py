@@ -42,20 +42,20 @@ CASE_STUDIES = [
         "edge":     "#0F6E56",
         "marker":   "o",
         "process": [
-            246871.43, 2406668.17, 970949.23, 246871.43, 119675.39,
-            112102.47, 39355.90,   17637.19,  54132.05,  3235.05,
-            3851.57,   3445.62,    23584.10,  4016.57,   4332.32,
-            2185.02,   3445.62,    23584.10,  372.85,    5063.56,
-            5063.56,   5063.56,    4458.98,   4317.80,   3602.95,
-            3602.95,   2769.10,
+            256353.2719, 2445458.499, 988094.1595, 256353.2719, 123596.7856,
+            115687.5215, 40869.13462, 18610.24217, 56028.43916, 3522.832894,
+            4238.347001, 3732.735945, 25476.3181,  4311.644914, 4654.523111,
+            2384.229888, 3732.735945, 25476.3181,  446.2550939, 5419.31291,
+            5419.31291,  5419.31291,  4786.19608,  4639.960763, 3888.028623,
+            3888.028623, 3009.50318,
         ],
         "eio": [
-            201000.00, 2700000.00, 464000.00, 238000.00, 412000.00,
-            426000.00, 177000.00,  110000.00, 124000.00, 18900.00,
-            22100.00,  18400.00,   282000.00, 14600.00,  50000.00,
-            12600.00,  5330.00,    46500.00,  3260.00,   18800.00,
-            26300.00,  9690.00,    7650.00,   9150.00,   9520.00,
-            8950.00,   7220.00,
+            201000, 2700000, 464000, 238000, 412000,
+            426000, 177000,  110000, 124000, 18900,
+            22100,  18400,   282000, 14600,  50000,
+            12600,  5330,    46500,  3260,   18800,
+            26300,  9690,    7650,   9150,   9520,
+            8950,   7220,
         ],
     },
     {
@@ -64,20 +64,22 @@ CASE_STUDIES = [
         "color":    "#185FA5",
         "edge":     "#0C447C",
         "marker":   "s",
-        # Vessel 1 (pretreatment reactor, process=402000, EIO=8640000) excluded:
-        # EIO-LCA cost aggregates multiple distinct unit operations (rolling storage
-        # bins, pin drum feeders, screw feeders, pressurized heating screws) reported
-        # as one line item in Humbird et al. (2011), whereas the process-based value
-        # covers only the reactor vessel. Incompatible system boundaries.
+        # n=22. Updated process-based values. Pretreatment reactor (vessel 1
+        # from original report) excluded on system boundary grounds — documented
+        # in manuscript supplementary.
         "process": [
-            4910,    38700,  7770,   115000, 50700,  120000, 359000,
-            2540000, 93900,  24100,  39100,  215000, 6000000, 395,   395,
-            10000,   77400,  342000, 93900,  493,    2270,   14700,
+            5308.012206, 40823.97084, 8281.954677, 118437.3078, 52621.36961,
+            124062.1625, 368512.1093, 2612933.555, 96869.22568, 25188.43692,
+            40703.1218, 224514.5405, 6134362.624, 499.729704, 499.729704,
+            10729.76577, 80614.1424, 351751.8131, 96869.22568, 579.0807123,
+            2473.506112, 15447.54352,
         ],
         "eio": [
-            3650,    7760,   6980,   239000, 95000,  106000, 199000,
-            1730000, 128000, 47000,  79800,  1450000, 4420000, 32900, 50900,
-            68700,   154000, 515000, 1570000, 80300, 100000, 166000,
+            3651.550301, 7759.815211, 6979.413871, 239167.6617, 95011.80489,
+            106294.0424, 198716.3534, 1734729.483, 127633.5342, 47016.03919,
+            79790.29558, 1451707.686, 4418051.311, 32891.25159, 50863.44813,
+            68748.54825, 153550.1384, 514741.1976, 1572360.506, 80264.77612,
+            100330.7535, 166462.0757,
         ],
     },
     {
@@ -87,20 +89,20 @@ CASE_STUDIES = [
         "edge":     "#993C1D",
         "marker":   "^",
         "process": [
-            119695.88, 112121.63, 39362.63, 17640.08,
-            246913.59, 1827541.32, 971114.55, 246913.59, 54141.32,
-            3235.62, 3852.16, 3446.06, 23588.10, 4017.32, 4333.10,
-            2185.49, 3446.06, 23588.10, 373.07,
-            5064.44, 5064.44, 5064.44, 4459.69,
-            4318.55, 3603.54, 3603.54, 2769.52,
+            123617.5956, 115706.9757, 40875.96472, 18613.18037,
+            256396.0844, 1857198.478, 988261.2889, 256396.0844, 56037.8527,
+            3523.411067, 4238.940599, 3733.181675, 25480.37807, 4312.40606,
+            4655.309256, 2384.709129, 3733.181675, 25480.37807, 446.4758316,
+            5420.208626, 5420.208626, 5420.208626, 4786.912015,
+            4640.730477, 3888.630822, 3888.630822, 3009.936554,
         ],
         "eio": [
-            440097.41, 421959.31, 181041.27, 178388.37,
-            207835.04, 1951463.35, 800119.43, 237377.33, 118266.73,
-            22358.26, 26246.47, 17948.80, 229202.88, 12771.65, 31383.97,
-            22956.09, 8308.16, 44350.75, 3543.82,
-            18971.87, 25590.72, 10063.94, 8326.04,
-            9235.61, 9791.07, 9145.82, 7791.57,
+            440097.4067, 421959.3066, 181041.2737, 178388.3681,
+            207835.037,  1951463.354, 800119.4335, 237377.3271, 118266.7252,
+            22358.26068, 26246.46794, 17948.8012,  229202.8796, 12771.6511,
+            31383.97022, 22956.08761, 8308.161748, 44350.75079, 3543.815414,
+            18971.87043, 25590.7241,  10063.93823, 8326.042138,
+            9235.609766, 9791.067946, 9145.819116, 7791.57398,
         ],
     },
     # -- Add further case studies here -----------------------------------------
@@ -128,7 +130,7 @@ FIG_SIZE = (52 / 25.4, 65 / 25.4)   # (2.047, 2.559) inches
 # 3. STYLE SETTINGS
 # Fonts tuned for 52x65mm panels in a 170mm double-column 3-up artboard.
 # ==============================================================================
-FONT_FAMILY   = ["Arial", "Helvetica", "Verdana", "Liberation Sans"]
+FONT_FAMILY   = ["Gill Sans"]
 AXIS_LABEL_FS = 7     # axis label font size (pt)
 TICK_FS       = 6.5   # tick label font size (pt)
 LEGEND_FS     = 6     # legend font size (pt)
@@ -141,7 +143,7 @@ RATIO_COLOR   = None        # set per case study (matches scatter color)
 # Line styles -- visually distinct:
 #   1:1 parity    -> densely dotted  (0, (1, 2))
 #   Aggregate ratio -> longer dashes (0, (5, 3))
-PARITY_LINESTYLE = (0, (1, 2))   # dotted
+PARITY_LINESTYLE = (0, (6, 3))   # dashed
 RATIO_LINESTYLE  = (0, (5, 3))   # dashed
 
 
@@ -194,10 +196,14 @@ def make_parity_plot(cs, s):
         "axes.linewidth":    0.5,
         "xtick.major.width": 0.5,
         "ytick.major.width": 0.5,
+        "xtick.minor.width": 0.4,
+        "ytick.minor.width": 0.4,
         "xtick.major.size":  2.5,
         "ytick.major.size":  2.5,
-        "xtick.direction":   "out",
-        "ytick.direction":   "out",
+        "xtick.minor.size":  1.5,
+        "ytick.minor.size":  1.5,
+        "xtick.direction":   "in",
+        "ytick.direction":   "in",
     })
 
     p = np.array(cs["process"], dtype=float)
@@ -207,8 +213,8 @@ def make_parity_plot(cs, s):
 
     # -- axis limits: auto-fit with 0.3 log-decade padding --------------------
     combined  = np.concatenate([p, e])
-    ax_min    = 10 ** (np.floor(np.log10(combined.min())) - 0.3)
-    ax_max    = 10 ** (np.ceil( np.log10(combined.max())) + 0.3)
+    ax_min    = 10 ** (np.floor(np.log10(combined.min())) - 0.01)
+    ax_max    = 10 ** (np.ceil( np.log10(combined.max())) + 0.01)
     ax_range  = [ax_min, ax_max]
 
     ax.set_xscale("log")
@@ -222,19 +228,18 @@ def make_parity_plot(cs, s):
             linestyle=":", zorder=0)
     ax.set_axisbelow(True)
 
-    # -- 1:1 parity line: densely dotted --------------------------------------
+    # -- factor-of-2 shading band (EEIO/process between 0.5x and 2.0x) ------
+    ax.fill_between(ax_range,
+                    [v * 0.5 for v in ax_range],
+                    [v * 2.0 for v in ax_range],
+                    color=cs["color"], alpha=0.10, zorder=0,
+                    label="Within 2\u00d7 of 1:1")
+
+    # -- 1:1 parity line: densely dotted ------------------------------------
     ax.plot(ax_range, ax_range,
             color=PARITY_COLOR, linewidth=0.9,
             linestyle=PARITY_LINESTYLE,
-            zorder=1, label="1:1 parity")
-
-    # -- aggregate ratio line: dashed, case study color -----------------------
-    ratio_y = [v * s["agg_ratio"] for v in ax_range]
-    ax.plot(ax_range, ratio_y,
-            color=cs["color"], linewidth=0.9,
-            linestyle=RATIO_LINESTYLE,
-            alpha=0.75, zorder=1,
-            label=f"Aggregate ratio ({s['agg_ratio']:.2f}\u00d7)")
+            zorder=1, label="1:1 line")
 
     # -- scatter points -------------------------------------------------------
     ax.scatter(
@@ -253,7 +258,17 @@ def make_parity_plot(cs, s):
     # -- tick format: 10^2, 10^3, etc. ----------------------------------------
     ax.xaxis.set_major_formatter(ticker.LogFormatterMathtext())
     ax.yaxis.set_major_formatter(ticker.LogFormatterMathtext())
-    ax.tick_params(labelsize=TICK_FS, pad=1.5)
+    # Minor locators must be set AFTER major formatter and with numticks
+    # explicitly large — LogFormatterMathtext suppresses minor ticks on x
+    # unless the locator is forced with numticks and a NullFormatter applied
+    ax.xaxis.set_minor_locator(ticker.LogLocator(base=10, subs=np.arange(2, 10), numticks=100))
+    ax.yaxis.set_minor_locator(ticker.LogLocator(base=10, subs=np.arange(2, 10), numticks=100))
+    ax.xaxis.set_minor_formatter(ticker.NullFormatter())
+    ax.yaxis.set_minor_formatter(ticker.NullFormatter())
+    ax.tick_params(which="major", direction="in", labelsize=TICK_FS, pad=1.5,
+                   length=2.5, width=0.5)
+    ax.tick_params(which="minor", direction="in", length=1.5, width=0.4,
+                   left=True, bottom=True, labelbottom=False, labelleft=False)
 
     # -- legend ---------------------------------------------------------------
     legend = ax.legend(fontsize=LEGEND_FS, frameon=True, framealpha=0.9,
