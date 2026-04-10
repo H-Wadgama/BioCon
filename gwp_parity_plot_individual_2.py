@@ -11,8 +11,9 @@ Usage:
     python gwp_parity_plot_individual.py
 
 Figure sizing:
-    240 px x 170 px at 96 DPI (Word screen resolution) = 2.5" x 1.77".
-    PNG exported at 300 DPI -> 750 x 531 px for print quality.
+    Target display: 550 x 685 px per panel.
+    At 300 DPI: FIG_SIZE = (550/300, 685/300) = (1.833", 2.283").
+    Three panels side by side = 1650 px total width.
 
 Reported statistic:
     Spearman rho -- rank-order agreement between methods, robust to the
@@ -36,22 +37,26 @@ from scipy import stats
 # ==============================================================================
 CASE_STUDIES = [
     {
-        "label":    "Dutta et al. (2015)",
-        "filename": "gwp_parity_plot_dutta_2015",
+        "label":    "Dutta et al. (2015) — in-situ pyrolysis",
+        "filename": "gwp_parity_plot_dutta_2015_insitu",
         "color":    "#1D9E75",
         "edge":     "#0F6E56",
         "marker":   "o",
         "process": [
-            247000, 1710000, 688000, 247000, 120000, 112000, 39400, 17600,
-            54100,  3240,    3850,   3450,   23600,  4020,   4330,  2190,
-            3450,   23600,   373,    5060,   5060,   5060,   4460,  7070,
-            5900,   5900,    4540,
+            256353.2719, 2445458.499, 988094.1595, 256353.2719, 123596.7856,
+            115687.5215, 40869.13462, 18610.24217, 56028.43916, 3522.832894,
+            4238.347001, 3732.735945, 25476.3181,  4311.644914, 4654.523111,
+            2384.229888, 3732.735945, 25476.3181,  446.2550939, 5419.31291,
+            5419.31291,  5419.31291,  4786.19608,  4639.960763, 3888.028623,
+            3888.028623, 3009.50318,
         ],
         "eio": [
-            201000,  2700000, 464000, 238000, 412000, 426000, 177000, 110000,
-            124000,  18900,   22100,  18400,  282000, 14600,  50000,  12600,
-            53300,   46500,   3260,   18800,  26300,  9690,   7650,   9150,
-            9520,    8950,    7220,
+            201000, 2700000, 464000, 238000, 412000,
+            426000, 177000,  110000, 124000, 18900,
+            22100,  18400,   282000, 14600,  50000,
+            12600,  5330,    46500,  3260,   18800,
+            26300,  9690,    7650,   9150,   9520,
+            8950,   7220,
         ],
     },
     {
@@ -60,20 +65,22 @@ CASE_STUDIES = [
         "color":    "#185FA5",
         "edge":     "#0C447C",
         "marker":   "s",
-        # Vessel 1 (pretreatment reactor, process=402000, EIO=8640000) excluded:
-        # EIO-LCA cost aggregates multiple distinct unit operations (rolling storage
-        # bins, pin drum feeders, screw feeders, pressurized heating screws) reported
-        # as one line item in Humbird et al. (2011), whereas the process-based value
-        # covers only the reactor vessel. Incompatible system boundaries.
+        # n=22. Updated process-based values. Pretreatment reactor (vessel 1
+        # from original report) excluded on system boundary grounds — documented
+        # in manuscript supplementary.
         "process": [
-            4910,    38700,  7770,   115000, 50700,  120000, 359000,
-            2540000, 93900,  24100,  39100,  215000, 6000000, 395,   395,
-            10000,   77400,  342000, 93900,  493,    2270,   14700,
+            5308.012206, 40823.97084, 8281.954677, 118437.3078, 52621.36961,
+            124062.1625, 368512.1093, 2612933.555, 96869.22568, 25188.43692,
+            40703.1218, 224514.5405, 6134362.624, 499.729704, 499.729704,
+            10729.76577, 80614.1424, 351751.8131, 96869.22568, 579.0807123,
+            2473.506112, 15447.54352,
         ],
         "eio": [
-            3650,    7760,   6980,   239000, 95000,  106000, 199000,
-            1730000, 128000, 47000,  79800,  1450000, 4420000, 32900, 50900,
-            68700,   154000, 515000, 1570000, 80300, 100000, 166000,
+            3651.550301, 7759.815211, 6979.413871, 239167.6617, 95011.80489,
+            106294.0424, 198716.3534, 1734729.483, 127633.5342, 47016.03919,
+            79790.29558, 1451707.686, 4418051.311, 32891.25159, 50863.44813,
+            68748.54825, 153550.1384, 514741.1976, 1572360.506, 80264.77612,
+            100330.7535, 166462.0757,
         ],
     },
     {
@@ -83,20 +90,20 @@ CASE_STUDIES = [
         "edge":     "#993C1D",
         "marker":   "^",
         "process": [
-            119695.88, 112121.63, 39362.63, 17640.08,
-            246913.59, 1827541.32, 971114.55, 246913.59, 54141.32,
-            3235.62, 3852.16, 3446.06, 23588.10, 4017.32, 4333.10,
-            2185.49, 3446.06, 23588.10, 373.07,
-            5064.44, 5064.44, 5064.44, 4459.69,
-            4318.55, 3603.54, 3603.54, 2769.52,
+            123617.5956, 115706.9757, 40875.96472, 18613.18037,
+            256396.0844, 1857198.478, 988261.2889, 256396.0844, 56037.8527,
+            3523.411067, 4238.940599, 3733.181675, 25480.37807, 4312.40606,
+            4655.309256, 2384.709129, 3733.181675, 25480.37807, 446.4758316,
+            5420.208626, 5420.208626, 5420.208626, 4786.912015,
+            4640.730477, 3888.630822, 3888.630822, 3009.936554,
         ],
         "eio": [
-            440097.41, 421959.31, 181041.27, 178388.37,
-            207835.04, 1951463.35, 800119.43, 237377.33, 118266.73,
-            22358.26, 26246.47, 17948.80, 229202.88, 12771.65, 31383.97,
-            22956.09, 8308.16, 44350.75, 3543.82,
-            18971.87, 25590.72, 10063.94, 8326.04,
-            9235.61, 9791.07, 9145.82, 7791.57,
+            440097.4067, 421959.3066, 181041.2737, 178388.3681,
+            207835.037,  1951463.354, 800119.4335, 237377.3271, 118266.7252,
+            22358.26068, 26246.46794, 17948.8012,  229202.8796, 12771.6511,
+            31383.97022, 22956.08761, 8308.161748, 44350.75079, 3543.815414,
+            18971.87043, 25590.7241,  10063.93823, 8326.042138,
+            9235.609766, 9791.067946, 9145.819116, 7791.57398,
         ],
     },
     # -- Add further case studies here -----------------------------------------
@@ -115,41 +122,30 @@ CASE_STUDIES = [
 # 2. OUTPUT SETTINGS
 # ==============================================================================
 PNG_DPI  = 300
-# 240 px x 170 px at 96 DPI (Word) = 2.5" x 1.77"
-FIG_SIZE = (240 / 96, 170 / 96)   # (2.5, 1.771) inches
+# Target display: 550 x 685 px per panel.
+# At 300 DPI: 550/300 = 1.833" wide, 685/300 = 2.283" tall.
+FIG_SIZE = (550 / 300, 685 / 300)   # (1.833, 2.283) inches
 
 # ==============================================================================
 # 3. STYLE SETTINGS
-# Fonts scaled up relative to figure size to remain legible in Word at
-# the target 240 x 170 px display dimensions.
+# Line weights and marker size scaled up to remain visually substantial
+# at the 550x685 px display target.
 # ==============================================================================
-FONT_FAMILY   = "Arial"
-AXIS_LABEL_FS = 6.5   # axis label font size (pt)
-TICK_FS       = 6.5   # tick label font size (pt)
-LEGEND_FS     = 6     # legend font size (pt)
-ANNOT_FS      = 6     # stats annotation font size (pt)
-POINT_SIZE    = 10    # scatter marker area (s= parameter)
-POINT_ALPHA   = 0.80
-PARITY_COLOR  = "#555555"   # 1:1 line -- dense dots
-RATIO_COLOR   = None        # set per case study (matches scatter color)
-
-# Line styles -- visually distinct:
-#   1:1 parity    -> densely dotted  (0, (1, 2))
-#   Aggregate ratio -> longer dashes (0, (5, 3))
-PARITY_LINESTYLE = (0, (1, 2))   # dotted
-RATIO_LINESTYLE  = (0, (5, 3))   # dashed
+FONT_FAMILY      = ["Arial"]
+AXIS_LABEL_FS    = 6.5    # axis label font size (pt)
+TICK_FS          = 6.0    # tick label font size (pt)
+LEGEND_FS        = 5.5    # legend font size (pt)
+ANNOT_FS         = 5.5    # stats annotation font size (pt)
+POINT_SIZE       = 9     # scatter marker area — doubled from previous 7
+POINT_ALPHA      = 0.80
+PARITY_COLOR     = "#555555"
+PARITY_LINESTYLE = (0, (6, 3))   # dashed 1:1 line
+RATIO_LINESTYLE  = (0, (5, 3))   # reserved if ratio line needed later
 
 
 # ==============================================================================
 # 4. STATISTICS
 # Only Spearman rho is computed and annotated on each figure.
-#
-# Rationale: magnitude-sensitive statistics (mean ratio, GSD, MAPE, Pearson R2)
-# are dominated by either the smallest vessels (small-denominator amplification)
-# or the largest vessels (leverage on regression). Spearman rho is robust to
-# both because it operates on ranks, making it the only statistic that cleanly
-# characterises vessel-level agreement across a multi-order-of-magnitude dataset.
-# Within-a-factor-of-2 coverage is reported separately in the manuscript text.
 # ==============================================================================
 def compute_stats(process, eio):
     """
@@ -186,13 +182,17 @@ def make_parity_plot(cs, s):
     """
     plt.rcParams.update({
         "font.family":       FONT_FAMILY,
-        "axes.linewidth":    0.5,
-        "xtick.major.width": 0.5,
-        "ytick.major.width": 0.5,
-        "xtick.major.size":  2.5,
-        "ytick.major.size":  2.5,
-        "xtick.direction":   "out",
-        "ytick.direction":   "out",
+        "axes.linewidth":    2,
+        "xtick.major.width": 2,
+        "ytick.major.width": 2,
+        "xtick.minor.width": 1.5,
+        "ytick.minor.width": 1.5,
+        "xtick.major.size":  6.0,
+        "ytick.major.size":  6.0,
+        "xtick.minor.size":  3,
+        "ytick.minor.size":  3,
+        "xtick.direction":   "in",
+        "ytick.direction":   "in",
     })
     plt.rcParams['svg.fonttype'] = 'none'
 
@@ -203,8 +203,8 @@ def make_parity_plot(cs, s):
 
     # -- axis limits: auto-fit with 0.3 log-decade padding --------------------
     combined  = np.concatenate([p, e])
-    ax_min    = 10 ** (np.floor(np.log10(combined.min())) - 0.3)
-    ax_max    = 10 ** (np.ceil( np.log10(combined.max())) + 0.3)
+    ax_min    = 10 ** (np.floor(np.log10(combined.min())) - 0.01)
+    ax_max    = 10 ** (np.ceil( np.log10(combined.max())) + 0.01)
     ax_range  = [ax_min, ax_max]
 
     ax.set_xscale("log")
@@ -213,48 +213,55 @@ def make_parity_plot(cs, s):
     ax.set_ylim(ax_range)
 
     # -- grid lines -----------------------------------------------------------
-    ax.grid(True, which="major", color="#dedede", linewidth=0.4, zorder=0)
-    ax.grid(True, which="minor", color="#dedede", linewidth=0.2,
-            linestyle=":", zorder=0)
+    ax.grid(True, which="major", color="#dedede", linewidth=1, zorder=0)
+    ax.grid(True, which="minor", color="#dedede", linewidth=0.5, zorder=0)
     ax.set_axisbelow(True)
 
-    # -- 1:1 parity line: densely dotted --------------------------------------
-    ax.plot(ax_range, ax_range,
-            color=PARITY_COLOR, linewidth=0.9,
-            linestyle=PARITY_LINESTYLE,
-            zorder=1, label="1:1 parity")
+    # -- factor-of-2 shading band (EEIO/process between 0.5x and 2.0x) ------
+    ax.fill_between(ax_range,
+                    [v * 0.5 for v in ax_range],
+                    [v * 2.0 for v in ax_range],
+                    color=cs["color"], alpha=0.10, zorder=0,
+                    label="Within 2\u00d7 of 1:1")
 
-    # -- aggregate ratio line: dashed, case study color -----------------------
-    ratio_y = [v * s["agg_ratio"] for v in ax_range]
-    ax.plot(ax_range, ratio_y,
-            color=cs["color"], linewidth=0.9,
-            linestyle=RATIO_LINESTYLE,
-            alpha=0.75, zorder=1,
-            label=f"Aggregate ratio ({s['agg_ratio']:.2f}\u00d7)")
+    # -- 1:1 parity line: dashed ----------------------------------------------
+    ax.plot(ax_range, ax_range,
+            color=PARITY_COLOR, linewidth=1.0,
+            linestyle=PARITY_LINESTYLE,
+            zorder=1, label="1:1 line")
 
     # -- scatter points -------------------------------------------------------
     ax.scatter(
         p, e,
         s=POINT_SIZE, color=cs["color"], marker=cs["marker"],
-        alpha=POINT_ALPHA, edgecolors=cs["edge"], linewidths=0.4,
+        alpha=POINT_ALPHA, edgecolors=cs["edge"], linewidths=0.5,
         zorder=3,
     )
 
-    # -- axis labels with correct CO2 subscript via mathtext ------------------
+    # -- axis labels ----------------------------------------------------------
     ax.set_xlabel(r"Process-based GWP (kg CO$_2$ eq.)",
                   fontsize=AXIS_LABEL_FS, labelpad=4)
-    ax.set_ylabel(r"EEIO-LCA GWP (kg CO$_2$ eq.)",
+    ax.set_ylabel(r"EEIO GWP (kg CO$_2$ eq.)",
                   fontsize=AXIS_LABEL_FS, labelpad=4)
 
     # -- tick format: 10^2, 10^3, etc. ----------------------------------------
     ax.xaxis.set_major_formatter(ticker.LogFormatterMathtext())
     ax.yaxis.set_major_formatter(ticker.LogFormatterMathtext())
-    ax.tick_params(labelsize=TICK_FS, pad=2)
+    # Minor locators forced with numticks and NullFormatter — required to
+    # prevent LogFormatterMathtext from suppressing x-axis minor ticks.
+    ax.xaxis.set_minor_locator(ticker.LogLocator(base=10, subs=np.arange(2, 10), numticks=100))
+    ax.yaxis.set_minor_locator(ticker.LogLocator(base=10, subs=np.arange(2, 10), numticks=100))
+    ax.xaxis.set_minor_formatter(ticker.NullFormatter())
+    ax.yaxis.set_minor_formatter(ticker.NullFormatter())
+    ax.tick_params(which="major", direction="in", labelsize=TICK_FS, pad=3.5,
+                   length=4.0, width=0.7)
+    ax.tick_params(which="minor", direction="in", length=2.5, width=0.5,
+                   left=True, bottom=True, labelbottom=False, labelleft=False)
 
     # -- legend ---------------------------------------------------------------
     legend = ax.legend(fontsize=LEGEND_FS, frameon=True, framealpha=0.9,
                        edgecolor="#cccccc", loc="upper left",
-                       handlelength=2.2, borderpad=0.5, labelspacing=0.3)
+                       handlelength=2.0, borderpad=0.4, labelspacing=0.25)
     legend.get_frame().set_linewidth(0.4)
 
     # -- Spearman rho annotation (upper right) --------------------------------
@@ -270,14 +277,14 @@ def make_parity_plot(cs, s):
         xy=(0.97, 0.97), xycoords="axes fraction",
         ha="right", va="top",
         fontsize=ANNOT_FS, color="#444444",
-        bbox=dict(boxstyle="round,pad=0.4", fc="white", ec="#cccccc", lw=0.4),
+        bbox=dict(boxstyle="round,pad=0.35", fc="white", ec="#cccccc", lw=0.4),
     )
 
     # -- title ----------------------------------------------------------------
-    ax.set_title(cs["label"], fontsize=6, fontweight="normal",
-                 pad=5, color="#333333")
+    ax.set_title(cs["label"], fontsize=6.5, fontweight="normal",
+                 pad=4, color="#333333")
 
-    plt.tight_layout(pad=0.8)
+    plt.tight_layout(pad=0.7)
 
     # -- export ---------------------------------------------------------------
     svg_path = cs["filename"] + ".svg"

@@ -1,0 +1,169 @@
+import matplotlib
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+import numpy as np
+
+# ── Font ──────────────────────────────────────────────────────────────────────
+font_pref = ["Arial", "Liberation Sans", "DejaVu Sans"]
+available = [f.name for f in matplotlib.font_manager.fontManager.ttflist]
+chosen = next((f for f in font_pref if f in available), "DejaVu Sans")
+print(f"Font: {chosen}")
+
+plt.rcParams.update({
+    "font.family": chosen,
+    "mathtext.fontset": "custom",
+    "mathtext.rm": chosen,
+    "mathtext.it": chosen,
+    "mathtext.bf": chosen,
+})
+
+plt.rcParams['svg.fonttype'] = 'none'
+
+# ── Okabe–Ito palette ─────────────────────────────────────────────────────────
+oi_colors = [
+    "#E69F00",  # orange          — equipment manufacturing
+    "#56B4E9",  # sky blue        — equipment installation
+    "#009E73",  # bluish green    — miscellaneous
+    "#F0E442",  # yellow          — site development
+    "#0072B2",  # blue            — additional piping
+    "#D55E00",  # vermillion      — field emissions
+    "#CC79A7",  # reddish purple  — warehouse development
+]
+
+categories = [
+    "Equipment manufacturing",
+    "Equipment installation",
+    "Miscellaneous",
+    "Site development",
+    "Additional piping",
+    "Field emissions",
+    "Warehouse development",
+]
+
+# ── Precise values from CSV (kg CO₂ eq) ───────────────────────────────────────
+insitu_kg = [
+    40073797.15,   # Equipment manufacturing
+    48518604.88,   # Equipment installation
+    9327505.549,   # Miscellaneous
+    4553814.991,   # Site development
+    4553814.991,   # Additional piping
+    2852586.648,   # Field emissions
+    1971217.483,   # Warehouse development
+]
+exsitu_kg = [
+    47657874.56,   # Equipment manufacturing
+    54300933.86,   # Equipment installation
+    10072270.99,   # Miscellaneous
+    5563721.222,   # Site development
+    5563721.222,   # Additional piping
+    3080793.580,   # Field emissions
+    2407415.947,   # Warehouse development
+]
+cellulosic_kg = [
+    69548543.88,   # Equipment manufacturing
+    26611347.05,   # Equipment installation
+    8014474.305,   # Miscellaneous
+    3226414.922,   # Site development
+    1613207.461,   # Additional piping
+    2446136.277,   # Field emissions
+    1559004.187,   # Warehouse development
+]
+
+all_data = [insitu_kg, exsitu_kg, cellulosic_kg]
+titles   = ["In-situ pyrolysis", "Ex-situ pyrolysis", "Cellulosic ethanol"]
+
+# ── Figure — 1000 px wide at 100 dpi ─────────────────────────────────────────
+DPI      = 300
+fig_w_px = 3000   # 3000/300 = 10.0 in
+fig_h_px = 1260   # 1260/300 = 4.2 in
+fig_w_in = fig_w_px / DPI
+fig_h_in = fig_h_px / DPI
+
+fig, axes = plt.subplots(1, 3, figsize=(fig_w_in, fig_h_in))
+
+# Font sizes scaled for 1000 px
+FS_TITLE  = 13
+FS_TOTAL  = 13
+FS_PCT    = 13
+FS_LEGEND = 13
+
+# ── draw_pie ──────────────────────────────────────────────────────────────────
+def draw_pie(ax, vals, title):
+    total_kg = sum(vals)
+    total_kt = total_kg / 1e6
+    fracs    = [v / total_kg for v in vals]
+
+    wedges, _ = ax.pie(
+        vals,
+        colors=oi_colors,
+        startangle=90,
+        counterclock=False,
+        wedgeprops=dict(linewidth=0.8, edgecolor="white"),
+    )
+
+    # Adaptive label radii
+    label_data = []
+    for i, (wedge, frac) in enumerate(zip(wedges, fracs)):
+        pct   = frac * 100
+        theta = np.deg2rad((wedge.theta1 + wedge.theta2) / 2)
+        if pct >= 20:   r_out = 1.14
+        elif pct >= 10: r_out = 1.21
+        elif pct >= 5:  r_out = 1.29
+        else:           r_out = 1.38
+        label_data.append(dict(theta=theta, pct=pct, r_out=r_out, r_in=0.78, idx=i))
+
+    # Stagger small slices
+    small_indices = [d["idx"] for d in label_data if d["pct"] < 5]
+    for j, idx in enumerate(small_indices):
+        label_data[idx]["r_out"] = 1.36 if j % 2 == 0 else 1.46
+
+    for d in label_data:
+        theta, r_in, r_out, pct = d["theta"], d["r_in"], d["r_out"], d["pct"]
+        ax.annotate(
+            f"{pct:.1f}%",
+            xy=(r_in  * np.cos(theta), r_in  * np.sin(theta)),
+            xytext=(r_out * np.cos(theta), r_out * np.sin(theta)),
+            fontsize=FS_PCT,
+            ha="center", va="center",
+            arrowprops=dict(
+                arrowstyle="-", color="#666666", lw=0.6,
+                shrinkA=0, shrinkB=2,
+            ),
+        )
+
+    ax.set_title(title, fontsize=FS_TITLE, fontweight="bold", pad=6)
+    ax.text(0, -1.72,
+            r"Total: " + f"{total_kt:.1f}" + r" kt CO$_2$ eq",
+            ha="center", va="top", fontsize=FS_TOTAL,
+            color="#222222", fontweight="bold", style="normal")
+
+    ax.set_xlim(-1.65, 1.65)
+    ax.set_ylim(-1.95, 1.50)
+
+for ax, title, data in zip(axes, titles, all_data):
+    draw_pie(ax, data, title)
+
+# ── Shared legend ─────────────────────────────────────────────────────────────
+handles = [
+    mpatches.Patch(facecolor=c, edgecolor="white", linewidth=0.8, label=lbl)
+    for c, lbl in zip(oi_colors, categories)
+]
+
+fig.legend(
+    handles=handles,
+    loc="lower center",
+    ncol=4,
+    fontsize=FS_LEGEND,
+    frameon=False,
+    columnspacing=1.2,
+    handlelength=2.6,
+    handleheight=0.85,
+    handletextpad=0.6,
+    bbox_to_anchor=(0.5, 0.0),
+)
+
+fig.tight_layout(rect=[0, 0.14, 1, 1])
+
+fig.savefig("ghg_pie_charts.png", dpi=DPI, bbox_inches="tight")
+fig.savefig("ghg_pie_charts.svg", format="svg", bbox_inches="tight")
+print("Done.")

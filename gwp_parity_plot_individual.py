@@ -121,21 +121,20 @@ CASE_STUDIES = [
 # 2. OUTPUT SETTINGS
 # ==============================================================================
 PNG_DPI  = 300
-# Each panel: 52mm x 65mm for a 170mm double-column artboard (3 panels side by side).
-# 3 x 52mm = 156mm, leaving 14mm for gaps and margins.
-# At 300 DPI: 614 x 768 px per panel.
-FIG_SIZE = (52 / 25.4, 65 / 25.4)   # (2.047, 2.559) inches
+# 3 panels at 300 DPI within 1800px total width = 600px per panel = 2.0" wide
+# Height maintains 52:65 aspect ratio → 2.5" = 750px per panel
+FIG_SIZE = (8, 10)   # inches
 
 # ==============================================================================
 # 3. STYLE SETTINGS
 # Fonts tuned for 52x65mm panels in a 170mm double-column 3-up artboard.
 # ==============================================================================
-FONT_FAMILY   = ["Gill Sans"]
-AXIS_LABEL_FS = 7     # axis label font size (pt)
-TICK_FS       = 6.5   # tick label font size (pt)
-LEGEND_FS     = 6     # legend font size (pt)
-ANNOT_FS      = 6     # stats annotation font size (pt)
-POINT_SIZE    = 8     # scatter marker area (s= parameter)
+FONT_FAMILY   = ["Arial"]
+AXIS_LABEL_FS = 30    # axis label font size (pt)
+TICK_FS       = 30   # tick label font size (pt)
+LEGEND_FS     = 30     # legend font size (pt)
+ANNOT_FS      = 30     # stats annotation font size (pt)
+POINT_SIZE    = 250     # scatter marker area (s= parameter)
 POINT_ALPHA   = 0.80
 PARITY_COLOR  = "#555555"   # 1:1 line -- dense dots
 RATIO_COLOR   = None        # set per case study (matches scatter color)
@@ -193,18 +192,19 @@ def make_parity_plot(cs, s):
     """
     plt.rcParams.update({
         "font.family":       FONT_FAMILY,
-        "axes.linewidth":    0.5,
-        "xtick.major.width": 0.5,
-        "ytick.major.width": 0.5,
-        "xtick.minor.width": 0.4,
-        "ytick.minor.width": 0.4,
+        "axes.linewidth":    2,
+        "xtick.major.width": 2,
+        "ytick.major.width": 2,
+        "xtick.minor.width": 2,
+        "ytick.minor.width": 2,
         "xtick.major.size":  2.5,
         "ytick.major.size":  2.5,
-        "xtick.minor.size":  1.5,
-        "ytick.minor.size":  1.5,
+        "xtick.minor.size":  2,
+        "ytick.minor.size":  2,
         "xtick.direction":   "in",
         "ytick.direction":   "in",
     })
+    plt.rcParams['svg.fonttype'] = 'none'
 
     p = np.array(cs["process"], dtype=float)
     e = np.array(cs["eio"],     dtype=float)
@@ -223,9 +223,8 @@ def make_parity_plot(cs, s):
     ax.set_ylim(ax_range)
 
     # -- grid lines -----------------------------------------------------------
-    ax.grid(True, which="major", color="#dedede", linewidth=0.4, zorder=0)
-    ax.grid(True, which="minor", color="#dedede", linewidth=0.2,
-            linestyle=":", zorder=0)
+    ax.grid(True, which="major", color="#dedede", linewidth=1.5, zorder=0)
+    ax.grid(True, which="minor", color="#dedede", linewidth=1.5, zorder=0)
     ax.set_axisbelow(True)
 
     # -- factor-of-2 shading band (EEIO/process between 0.5x and 2.0x) ------
@@ -237,7 +236,7 @@ def make_parity_plot(cs, s):
 
     # -- 1:1 parity line: densely dotted ------------------------------------
     ax.plot(ax_range, ax_range,
-            color=PARITY_COLOR, linewidth=0.9,
+            color=PARITY_COLOR, linewidth=2,
             linestyle=PARITY_LINESTYLE,
             zorder=1, label="1:1 line")
 
@@ -245,15 +244,15 @@ def make_parity_plot(cs, s):
     ax.scatter(
         p, e,
         s=POINT_SIZE, color=cs["color"], marker=cs["marker"],
-        alpha=POINT_ALPHA, edgecolors=cs["edge"], linewidths=0.4,
+        alpha=POINT_ALPHA, edgecolors=cs["edge"], linewidths=2,
         zorder=3,
     )
 
     # -- axis labels with correct CO2 subscript via mathtext ------------------
     ax.set_xlabel(r"Process-based GWP (kg CO$_2$ eq.)",
-                  fontsize=AXIS_LABEL_FS, labelpad=3)
+                  fontsize=AXIS_LABEL_FS, labelpad=5)
     ax.set_ylabel(r"EEIO GWP (kg CO$_2$ eq.)",
-                  fontsize=AXIS_LABEL_FS, labelpad=3)
+                  fontsize=AXIS_LABEL_FS, labelpad=5)
 
     # -- tick format: 10^2, 10^3, etc. ----------------------------------------
     ax.xaxis.set_major_formatter(ticker.LogFormatterMathtext())
@@ -265,9 +264,9 @@ def make_parity_plot(cs, s):
     ax.yaxis.set_minor_locator(ticker.LogLocator(base=10, subs=np.arange(2, 10), numticks=100))
     ax.xaxis.set_minor_formatter(ticker.NullFormatter())
     ax.yaxis.set_minor_formatter(ticker.NullFormatter())
-    ax.tick_params(which="major", direction="in", labelsize=TICK_FS, pad=1.5,
-                   length=2.5, width=0.5)
-    ax.tick_params(which="minor", direction="in", length=1.5, width=0.4,
+    ax.tick_params(which="major", direction="in", labelsize=TICK_FS, pad=10,
+                   length=10, width=2)
+    ax.tick_params(which="minor", direction="in", length=10, width=2,
                    left=True, bottom=True, labelbottom=False, labelleft=False)
 
     # -- legend ---------------------------------------------------------------
