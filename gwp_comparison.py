@@ -288,13 +288,13 @@ def make_parity_plot(cs, s):
 
     # -- export ---------------------------------------------------------------
     svg_path = cs["filename"] + ".svg"
-    png_path = cs["filename"] + ".png"
+    #png_path = cs["filename"] + ".png"
 
     fig.savefig(svg_path, format="svg", bbox_inches="tight")
     print(f"  Saved: {svg_path}")
 
-    fig.savefig(png_path, format="png", dpi=PNG_DPI, bbox_inches="tight")
-    print(f"  Saved: {png_path}  ({PNG_DPI} DPI)")
+    #fig.savefig(png_path, format="png", dpi=PNG_DPI, bbox_inches="tight")
+    #print(f"  Saved: {png_path}  ({PNG_DPI} DPI)")
 
     plt.close(fig)
 
