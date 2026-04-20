@@ -37,7 +37,7 @@ from scipy import stats
 # ==============================================================================
 CASE_STUDIES = [
     {
-        "label":    "Dutta et al. (2015) — in-situ pyrolysis",
+        "label":    "In-situ pyrolysis",
         "filename": "gwp_parity_plot_dutta_2015_insitu",
         "color":    "#1D9E75",
         "edge":     "#0F6E56",
@@ -60,7 +60,7 @@ CASE_STUDIES = [
         ],
     },
     {
-        "label":    "Humbird et al. (2011)",
+        "label":    "Cellulosic ethanol",
         "filename": "gwp_parity_plot_humbird_2011",
         "color":    "#185FA5",
         "edge":     "#0C447C",
@@ -84,7 +84,7 @@ CASE_STUDIES = [
         ],
     },
     {
-        "label":    "Dutta et al. (2015) — ex-situ pyrolysis",
+        "label":    "Ex-situ pyrolysis",
         "filename": "gwp_parity_plot_dutta_2015_exsitu",
         "color":    "#D85A30",
         "edge":     "#993C1D",
