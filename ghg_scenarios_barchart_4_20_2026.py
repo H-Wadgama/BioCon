@@ -1,38 +1,34 @@
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+import matplotlib.lines as mlines
 import numpy as np
 from pathlib import Path
 
-# ── Target: 1800 px wide at 300 DPI → 6.0 × 4.5 inches ──────────────
 TARGET_DPI = 300
 FIG_W      = 6.0
-FIG_H      = 4.5
+FIG_H      = 4.0
 
-FONTS = ["Arial"]
+FONTS = ["Gill Sans MT", "Gill Sans", "Arial", "Liberation Sans"]
 plt.rcParams["font.family"]      = "sans-serif"
 plt.rcParams["font.sans-serif"]  = FONTS
-plt.rcParams["axes.linewidth"]   = 1.0
+plt.rcParams["axes.linewidth"]   = 2.0
 plt.rcParams["xtick.direction"]  = "in"
 plt.rcParams["ytick.direction"]  = "in"
 plt.rcParams["mathtext.fontset"] = "custom"
 plt.rcParams["mathtext.sf"]      = "Arial"
-plt.rcParams["svg.fonttype"] = "none"
-# ── Font sizes ────────────────────────────────────────────────────────
-FS_TITLE   = 11.0   # case study group labels
-FS_SUBLBL  =  8.5   # sub-bar labels (Displacement / Energy)
-FS_YLABEL  = 11.0   # y-axis label
-FS_YTICK   =  9.5   # y-tick numbers
-FS_LEGEND  =  8.0   # legend text
+plt.rcParams["svg.fonttype"]     = "none"
+
+FS_TITLE  = 11.0
+FS_YLABEL = 11.0
+FS_YTICK  =  9.5
+FS_LEGEND =  8.0
 
 # ── Data ──────────────────────────────────────────────────────────────
-cases   = ["In-situ pyrolysis", "Ex-situ pyrolysis", "Humbird et al."]
-op_wo   = np.array([13.10, 12.56, 23.00])
+cases   = ["In-situ pyrolysis", "Ex-situ pyrolysis", "Cellulosic ethanol"]
 op_disp = np.array([ 9.18, 10.15,  5.84])
 op_eng  = np.array([12.11, 12.22, 19.12])
 con_lo  = np.array([ 0.56,  0.58,  0.73])
-
-cr_disp = op_disp - op_wo
-cr_eng  = op_eng  - op_wo
+con_hi  = np.array([ 3.03,  3.15,  4.21])
 
 # ── Layout ────────────────────────────────────────────────────────────
 n           = len(cases)
@@ -46,33 +42,36 @@ x_d = gc - bar_w / 2 - pair_gap / 2
 x_e = gc + bar_w / 2 + pair_gap / 2
 
 # ── Colours ───────────────────────────────────────────────────────────
-c_op_d = "#185FA5"
-c_cr_d = "#85B7EB"
-c_op_e = "#0F6E56"
-c_cr_e = "#5DCAA5"
-c_con  = "#EF9F27"
+c_op_d   = "#007093"
+c_op_e   = "#C17B1E"
+c_con_lo = "#3B6D11"   # green  — baseline circle
+c_con_hi = "#A32D2D"   # red    — high diamond
+
+MS  = 7.5
+MEW = 1.2
 
 # ── Figure ────────────────────────────────────────────────────────────
 fig, ax = plt.subplots(figsize=(FIG_W, FIG_H))
 
 for i in range(n):
-    ax.bar(x_d[i], cr_disp[i], bar_w, color=c_cr_d, zorder=3, linewidth=0)
-    ax.bar(x_e[i], cr_eng[i],  bar_w, color=c_cr_e, zorder=3, linewidth=0)
+    # Operational bars
+    ax.bar(x_d[i], op_disp[i], bar_w, color=c_op_d, zorder=3, linewidth=0)
+    ax.bar(x_e[i], op_eng[i],  bar_w, color=c_op_e, zorder=3, linewidth=0)
 
-    ax.bar(x_d[i], op_wo[i], bar_w, color=c_op_d, zorder=3, linewidth=0)
-    ax.bar(x_e[i], op_wo[i], bar_w, color=c_op_e, zorder=3, linewidth=0)
+    # Construction markers — both centred on bar x
+    ax.plot(x_d[i], op_disp[i] + con_lo[i],
+            marker="o", markersize=MS, color=c_con_lo,
+            markeredgecolor="white", markeredgewidth=MEW, zorder=5)
+    ax.plot(x_e[i], op_eng[i] + con_lo[i],
+            marker="o", markersize=MS, color=c_con_lo,
+            markeredgecolor="white", markeredgewidth=MEW, zorder=5)
 
-    ax.bar(x_d[i], con_lo[i], bar_w, bottom=op_wo[i],
-           color=c_con, zorder=3, linewidth=0)
-    ax.bar(x_e[i], con_lo[i], bar_w, bottom=op_wo[i],
-           color=c_con, zorder=3, linewidth=0)
-
-    ax.plot(x_d[i], op_disp[i], marker="D", markersize=6.5,
-            color="white", markeredgecolor="#1a1a1a",
-            markeredgewidth=1.1, zorder=5)
-    ax.plot(x_e[i], op_eng[i],  marker="D", markersize=6.5,
-            color="white", markeredgecolor="#1a1a1a",
-            markeredgewidth=1.1, zorder=5)
+    ax.plot(x_d[i], op_disp[i] + con_hi[i],
+            marker="D", markersize=MS, color=c_con_hi,
+            markeredgecolor="white", markeredgewidth=MEW, zorder=5)
+    ax.plot(x_e[i], op_eng[i] + con_hi[i],
+            marker="D", markersize=MS, color=c_con_hi,
+            markeredgecolor="white", markeredgewidth=MEW, zorder=5)
 
 # ── Zero line ─────────────────────────────────────────────────────────
 ax.axhline(0, color="#1a1a1a", linewidth=1.1, zorder=2)
@@ -83,33 +82,22 @@ for i in range(1, n):
                linewidth=0.9, linestyle=(0, (5, 4)), zorder=1)
 
 # ── Case study labels ─────────────────────────────────────────────────
-y_top = (op_wo + con_lo).max()
+y_top = (np.maximum(op_disp, op_eng) + con_hi).max()
 for i, name in enumerate(cases):
-    ax.text(gc[i], y_top + 1.1, name,
+    ax.text(gc[i], y_top + 0.8, name,
             ha="center", va="bottom",
             fontsize=FS_TITLE, color="#1a1a1a")
 
-# ── Sub-bar labels ────────────────────────────────────────────────────
-y_sub = cr_disp.min() - 0.9
-for i in range(n):
-    ax.text(x_d[i], y_sub, "Displacement\nallocation",
-            ha="center", va="top", fontsize=FS_SUBLBL,
-            color="#3a3a3a", linespacing=1.4, clip_on=False)
-    ax.text(x_e[i], y_sub, "Energy\nallocation",
-            ha="center", va="top", fontsize=FS_SUBLBL,
-            color="#3a3a3a", linespacing=1.4, clip_on=False)
-
 # ── Axes ──────────────────────────────────────────────────────────────
-y_min = cr_disp.min() - 5.5
-y_max = y_top + 4.5
+y_min = 0
+y_max = y_top + 4.0
 
-ax.set_xlim(gc[0]  - group_pitch / 2 + 0.1,
-            gc[-1] + group_pitch / 2 - 0.1)
+ax.set_xlim(gc[0]  - group_pitch / 2 + 0.01,
+            gc[-1] + group_pitch / 2 - 0.01)
 ax.set_ylim(y_min, y_max)
 ax.set_xticks([])
 
-yticks = np.arange(int(np.ceil(y_min / 5)) * 5,
-                   int(np.floor(y_max / 5)) * 5 + 1, 5)
+yticks = np.arange(0, int(np.floor(y_max / 5)) * 5 + 1, 5)
 ax.set_yticks(yticks)
 ax.set_yticklabels([str(int(v)) for v in yticks], fontsize=FS_YTICK)
 ax.set_ylabel(
@@ -117,32 +105,33 @@ ax.set_ylabel(
     fontsize=FS_YLABEL, labelpad=8)
 
 ax.tick_params(axis="y", which="both", direction="in",
-               length=4, width=1.0)
+               length=4, width=2.0)
 ax.tick_params(axis="x", bottom=False, top=False)
 
 for spine in ax.spines.values():
     spine.set_visible(True)
-    spine.set_linewidth(1.0)
+    spine.set_linewidth(2.0)
 
-ax.yaxis.grid(True, linewidth=0.5, color="#CCCCCC", zorder=0)
+ax.yaxis.grid(True, linewidth=2, color="#CCCCCC", zorder=0)
 ax.set_axisbelow(True)
 
 # ── Legend ────────────────────────────────────────────────────────────
 legend_items = [
-    mpatches.Patch(facecolor=c_op_d, label="Operational w/o elec. credits — displacement"),
-    mpatches.Patch(facecolor=c_cr_d, label="Electricity credit — displacement allocation"),
-    mpatches.Patch(facecolor=c_op_e, label="Operational w/o elec. credits — energy"),
-    mpatches.Patch(facecolor=c_cr_e, label="Electricity credit — energy allocation"),
-    mpatches.Patch(facecolor=c_con,  label="Construction GHG (baseline)"),
-    plt.Line2D([0], [0], marker="D", color="none",
-               markerfacecolor="white", markeredgecolor="#1a1a1a",
-               markeredgewidth=1.1, markersize=6.5,
-               label="Net GHG intensity"),
+    mpatches.Patch(facecolor=c_op_d, label="Displacement allocation"),
+    mpatches.Patch(facecolor=c_op_e, label="Energy allocation"),
+    mlines.Line2D([], [], marker="o", color="none",
+                  markerfacecolor=c_con_lo, markeredgecolor="white",
+                  markeredgewidth=MEW, markersize=MS,
+                  label="Construction GHG — baseline"),
+    mlines.Line2D([], [], marker="D", color="none",
+                  markerfacecolor=c_con_hi, markeredgecolor="white",
+                  markeredgewidth=MEW, markersize=MS,
+                  label="Construction GHG — high estimate"),
 ]
 ax.legend(
     handles=legend_items,
     fontsize=FS_LEGEND,
-    loc="lower left",
+    loc="upper left",
     frameon=True,
     framealpha=0.93,
     edgecolor="#AAAAAA",
@@ -156,9 +145,9 @@ ax.legend(
 fig.tight_layout(pad=0.6)
 
 out_dir = Path(__file__).parent
-fig.savefig(out_dir / "ghg_scenarios_barchart_v8.png",
-            dpi=TARGET_DPI, bbox_inches="tight", format="svg")
-fig.savefig(out_dir / "ghg_scenarios_barchart_v8.svg",
+fig.savefig(out_dir / "ghg_scenarios_barchart_v11.svg",
             bbox_inches="tight", format="svg")
-print(f"Saved SVG+PNG — — PNG will be {round(FIG_W * TARGET_DPI)} × {round(FIG_H * TARGET_DPI)} px")
+fig.savefig(out_dir / "ghg_scenarios_barchart_v11.png",
+            dpi=TARGET_DPI, bbox_inches="tight")
+print("Done:", out_dir)
 plt.close()

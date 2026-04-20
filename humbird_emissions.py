@@ -29,8 +29,8 @@ BASE_PRODUCTION_GAL   = 61e6              # gal/yr at base uptime
 BASE_OPERATING_FACTOR = 0.96              # uptime corresponding to 61 MM gal/yr
 LHV_MMBTU_PER_GAL     = 0.08             # ethanol LHV (MMBTU/gal)
 MJ_PER_MMBTU          = 1055.056         # 1 MMBTU = 1055.056 MJ
-EF_G_PER_MJ           = 23.0             # bioethanol lifecycle GHG (gCO2e/MJ)
-EF_G_PER_MMBTU        = 24_266.38        # same, in gCO2e/MMBTU (cross-check)
+EF_G_PER_MJ           = 5.84             # bioethanol lifecycle GHG (gCO2e/MJ)
+EF_G_PER_MMBTU        = 6_161.53         # same, in gCO2e/MMBTU (cross-check)
 LIFETIME_YEARS        = 30.0
 
 
@@ -160,14 +160,15 @@ def plot_contour(of_vals, lt_vals, Z_pct, output_path="humbird_construction_shar
         except Exception: pass
     mpl.rcParams["font.family"] = "sans-serif"
     mpl.rcParams["font.sans-serif"] = ["Arial", "Liberation Sans", "DejaVu Sans"]
+    plt.rcParams['svg.fonttype'] = 'none'
 
     fig, ax = plt.subplots(figsize=(FIG_W_IN, FIG_H_IN))
 
     OF, LT = np.meshgrid(of_vals, lt_vals)
 
-    levels = np.arange(2, 28, 2)
+    levels = np.arange(10, 46, 5)   # 7 lines: 10, 15, 20, 25, 30, 35, 40, 45
     cf = ax.contourf(OF, LT, Z_pct, levels=levels, cmap="YlOrRd", extend="neither")
-    cs = ax.contour(OF, LT, Z_pct, levels=levels, colors="black", linewidths=0.25, alpha=0.6)
+    cs = ax.contour(OF, LT, Z_pct, levels=levels, colors="black", linewidths=0.5, alpha=0.6)
     ax.clabel(cs, fmt="%.0f%%", fontsize=FS_CLABEL, inline=True)
 
     # Mark base case (OF=0.96, LT=30)
@@ -176,8 +177,10 @@ def plot_contour(of_vals, lt_vals, Z_pct, output_path="humbird_construction_shar
             label="Base case\n(OF=0.96, LT=30 yr)")
 
     cbar = fig.colorbar(cf, ax=ax, pad=0.03)
+    cbar.outline.set_linewidth(1.5)  # or whatever value you choose
+
     cbar.set_label("Construction share (%)", fontsize=FS_CBAR_LABEL)
-    cbar.ax.tick_params(labelsize=FS_TICK, width=0.3, length=1.5)
+    cbar.ax.tick_params(labelsize=FS_TICK, width=1.5, length=1.5)
 
     ax.set_xlabel("Operating Factor", fontsize=FS_AXLABEL)
     ax.set_ylabel("Biorefinery Lifetime (years)", fontsize=FS_AXLABEL)
@@ -186,11 +189,11 @@ def plot_contour(of_vals, lt_vals, Z_pct, output_path="humbird_construction_shar
     ax.set_ylim(lt_vals[0], lt_vals[-1])
     ax.set_xticks([0.50, 0.60, 0.70, 0.80, 0.90])
     ax.xaxis.set_major_formatter(ticker.FormatStrFormatter("%.2f"))
-    ax.tick_params(axis="both", labelsize=FS_TICK, width=0.3, length=1.5)
+    ax.tick_params(axis="both", labelsize=FS_TICK, width=1.5, length=1.5)
     ax.legend(fontsize=FS_LEGEND, loc="upper right",
               handlelength=0.8, borderpad=0.4, labelspacing=0.3)
     for spine in ax.spines.values():
-        spine.set_linewidth(0.3)
+        spine.set_linewidth(1.5)
 
     plt.subplots_adjust(left=0.14, right=0.74, top=0.88, bottom=0.18)
     plt.savefig(output_path, dpi=DPI)
